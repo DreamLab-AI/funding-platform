@@ -280,6 +280,162 @@ funding-platform/
 | **Scheme Owner** | View results, approve funding decisions |
 | **Admin** | Full system access, user management, audit logs |
 
+```mermaid
+flowchart LR
+    subgraph Roles["User Roles & Permissions"]
+        Admin["🔑 Admin"]
+        Coord["📋 Coordinator"]
+        Owner["💰 Scheme Owner"]
+        Assessor["📝 Assessor"]
+        Applicant["👤 Applicant"]
+    end
+
+    subgraph Actions
+        Users["Manage Users"]
+        Calls["Manage Calls"]
+        Assign["Assign Assessors"]
+        Review["Review Results"]
+        Assess["Submit Assessments"]
+        Apply["Submit Applications"]
+    end
+
+    Admin --> Users & Calls & Assign & Review & Assess & Apply
+    Coord --> Calls & Assign & Review
+    Owner --> Review
+    Assessor --> Assess
+    Applicant --> Apply
+
+    style Admin fill:#ff6b6b,stroke:#c92a2a
+    style Coord fill:#4dabf7,stroke:#1864ab
+    style Owner fill:#69db7c,stroke:#2b8a3e
+    style Assessor fill:#ffd43b,stroke:#f59f00
+    style Applicant fill:#e599f7,stroke:#9c36b5
+```
+
+## Application Lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Draft: Create Application
+    Draft --> Draft: Edit & Save
+    Draft --> Submitted: Submit
+    Submitted --> UnderReview: Assign Assessors
+    UnderReview --> UnderReview: Assessments In Progress
+    UnderReview --> Assessed: All Assessments Complete
+    Assessed --> Ranked: Calculate Scores
+    Ranked --> Approved: Funding Decision
+    Ranked --> Rejected: Funding Decision
+    Approved --> [*]
+    Rejected --> [*]
+
+    note right of Draft: Applicant can edit
+    note right of Submitted: Locked for review
+    note right of UnderReview: 2+ assessors assigned
+    note right of Assessed: Variance check
+```
+
+## Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant N as Nostr Extension
+    participant DB as Database
+
+    alt JWT Authentication
+        U->>F: Enter email/password
+        F->>B: POST /auth/login
+        B->>DB: Verify credentials
+        DB-->>B: User record
+        B-->>F: JWT + Refresh Token
+        F->>F: Store tokens
+    end
+
+    alt Nostr DID Authentication
+        U->>F: Click "Sign in with Nostr"
+        F->>B: POST /auth/nostr/challenge
+        B-->>F: Challenge event
+        F->>N: Sign challenge (NIP-07)
+        N-->>F: Signed event
+        F->>B: POST /auth/nostr/verify
+        B->>B: Verify signature
+        B->>DB: Find/create user by pubkey
+        DB-->>B: User record
+        B-->>F: JWT + Refresh Token
+    end
+
+    Note over F,B: All subsequent requests include JWT in Authorization header
+```
+
+## Database Schema
+
+```mermaid
+erDiagram
+    USERS ||--o{ APPLICATIONS : submits
+    USERS ||--o{ ASSESSMENTS : writes
+    USERS ||--o{ USER_IDENTITIES : has
+    FUNDING_CALLS ||--o{ APPLICATIONS : receives
+    FUNDING_CALLS ||--o{ ASSESSMENT_CRITERIA : defines
+    FUNDING_CALLS ||--o{ ASSESSOR_POOLS : has
+    APPLICATIONS ||--o{ ASSESSMENTS : evaluated_by
+    APPLICATIONS ||--o{ APPLICATION_FILES : contains
+    ASSIGNMENTS ||--|| APPLICATIONS : references
+    ASSIGNMENTS ||--|| USERS : assigned_to
+    ASSESSMENTS ||--o{ ASSESSMENT_SCORES : contains
+    ASSESSMENT_CRITERIA ||--o{ ASSESSMENT_SCORES : uses
+
+    USERS {
+        uuid user_id PK
+        string email UK
+        string password_hash
+        enum role
+        string first_name
+        string last_name
+        boolean is_active
+        timestamp last_login
+    }
+
+    USER_IDENTITIES {
+        uuid identity_id PK
+        uuid user_id FK
+        string nostr_pubkey UK
+        string did
+        string nip05_identifier
+        boolean nip05_verified
+    }
+
+    FUNDING_CALLS {
+        uuid call_id PK
+        string name
+        text description
+        enum status
+        timestamp open_at
+        timestamp close_at
+        jsonb settings
+    }
+
+    APPLICATIONS {
+        uuid application_id PK
+        uuid call_id FK
+        uuid applicant_id FK
+        enum status
+        jsonb form_data
+        timestamp submitted_at
+    }
+
+    ASSESSMENTS {
+        uuid assessment_id PK
+        uuid assignment_id FK
+        uuid assessor_id FK
+        enum status
+        text comments
+        boolean coi_declared
+        timestamp submitted_at
+    }
+```
+
 ## API Overview
 
 ### Authentication
@@ -422,6 +578,44 @@ Available visualizations:
 
 ## AI Provider Configuration
 
+```mermaid
+flowchart TB
+    subgraph Client["Frontend Client"]
+        UI[AI Features UI]
+    end
+
+    subgraph Backend["Backend API"]
+        Router[AI Router]
+        Cache[(Response Cache)]
+    end
+
+    subgraph Providers["AI Providers"]
+        OpenAI[OpenAI<br/>GPT-4/3.5]
+        Anthropic[Anthropic<br/>Claude]
+        Ollama[Ollama<br/>Local Models]
+        LMStudio[LM Studio<br/>Local Inference]
+        Custom[Custom<br/>Any OpenAI-compatible]
+    end
+
+    subgraph Features["AI Features"]
+        Summarize[📄 Summarize<br/>Application summaries]
+        Scoring[📊 Scoring Assist<br/>AI suggestions]
+        Anomaly[⚠️ Anomaly Detection<br/>Score variance]
+        Similarity[🔗 Similarity<br/>Find duplicates]
+    end
+
+    UI --> Router
+    Router --> Cache
+    Cache -.->|Cache Hit| Router
+    Router --> OpenAI & Anthropic & Ollama & LMStudio & Custom
+    Router --> Features
+
+    style OpenAI fill:#10a37f,stroke:#0d8a6f,color:#fff
+    style Anthropic fill:#d4a574,stroke:#b8956a
+    style Ollama fill:#1a1a1a,stroke:#333,color:#fff
+    style LMStudio fill:#6366f1,stroke:#4f46e5,color:#fff
+```
+
 Configure AI providers in `.env`:
 
 ```bash
@@ -537,6 +731,60 @@ cd wasm-viz && wasm-pack build --target web
 ```
 
 ## Deployment
+
+```mermaid
+flowchart TB
+    subgraph Internet
+        Users[👥 Users]
+        CDN[CloudFront/CDN]
+    end
+
+    subgraph LoadBalancer["Load Balancer"]
+        ALB[Application<br/>Load Balancer]
+    end
+
+    subgraph K8s["Kubernetes Cluster"]
+        subgraph Frontend["Frontend Pods"]
+            F1[React App]
+            F2[React App]
+        end
+        subgraph Backend["Backend Pods"]
+            B1[Express API]
+            B2[Express API]
+            B3[Express API]
+        end
+        subgraph Workers["Background Workers"]
+            W1[Email Worker]
+            W2[Export Worker]
+        end
+    end
+
+    subgraph DataStores["Data Layer"]
+        PG[(PostgreSQL<br/>Primary)]
+        PGR[(PostgreSQL<br/>Replica)]
+        Redis[(Redis<br/>Cluster)]
+        S3[(S3 Bucket<br/>Files)]
+    end
+
+    subgraph Monitoring["Observability"]
+        Prom[Prometheus]
+        Graf[Grafana]
+        Logs[CloudWatch<br/>Logs]
+    end
+
+    Users --> CDN --> ALB
+    ALB --> Frontend & Backend
+    Backend --> PG & Redis & S3
+    PG --> PGR
+    Workers --> PG & Redis
+    Backend --> Prom
+    Prom --> Graf
+    Backend --> Logs
+
+    style K8s fill:#326ce5,stroke:#1a4db0,color:#fff
+    style DataStores fill:#f3e5f5,stroke:#7b1fa2
+    style Monitoring fill:#fff3e0,stroke:#e65100
+```
 
 ### Docker Production
 
