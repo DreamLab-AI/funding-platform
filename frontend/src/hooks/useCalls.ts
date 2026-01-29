@@ -1,0 +1,278 @@
+// =============================================================================
+// useCalls Hook - Funding Calls Data Management
+// =============================================================================
+
+import { useState, useEffect, useCallback } from 'react';
+import {
+  FundingCall,
+  FundingCallSummary,
+  CreateCallData,
+  CallStatus,
+  PaginationOptions,
+  SortOptions,
+  PaginatedResponse,
+} from '../types';
+import { callsApi } from '../services/api';
+
+// -----------------------------------------------------------------------------
+// useOpenCalls - For applicants viewing available calls
+// -----------------------------------------------------------------------------
+
+interface UseOpenCallsReturn {
+  calls: FundingCallSummary[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useOpenCalls(): UseOpenCallsReturn {
+  const [calls, setCalls] = useState<FundingCallSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchCalls = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await callsApi.getOpenCalls();
+      setCalls(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch calls';
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCalls();
+  }, [fetchCalls]);
+
+  return { calls, isLoading, error, refetch: fetchCalls };
+}
+
+// -----------------------------------------------------------------------------
+// useAllCalls - For coordinators managing all calls
+// -----------------------------------------------------------------------------
+
+interface UseAllCallsOptions {
+  pagination?: PaginationOptions;
+  sort?: SortOptions;
+}
+
+interface UseAllCallsReturn {
+  calls: FundingCallSummary[];
+  total: number;
+  totalPages: number;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  setPagination: (pagination: PaginationOptions) => void;
+  setSort: (sort: SortOptions) => void;
+}
+
+export function useAllCalls(options?: UseAllCallsOptions): UseAllCallsReturn {
+  const [calls, setCalls] = useState<FundingCallSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationOptions>(
+    options?.pagination || { page: 1, pageSize: 10 }
+  );
+  const [sort, setSort] = useState<SortOptions | undefined>(options?.sort);
+
+  const fetchCalls = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response: PaginatedResponse<FundingCallSummary> = await callsApi.getAllCalls(
+        pagination,
+        sort
+      );
+      setCalls(response.data);
+      setTotal(response.total);
+      setTotalPages(response.totalPages);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch calls';
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pagination, sort]);
+
+  useEffect(() => {
+    fetchCalls();
+  }, [fetchCalls]);
+
+  return {
+    calls,
+    total,
+    totalPages,
+    isLoading,
+    error,
+    refetch: fetchCalls,
+    setPagination,
+    setSort,
+  };
+}
+
+// -----------------------------------------------------------------------------
+// useCall - Single call details
+// -----------------------------------------------------------------------------
+
+interface UseCallReturn {
+  call: FundingCall | null;
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+}
+
+export function useCall(callId: string | undefined): UseCallReturn {
+  const [call, setCall] = useState<FundingCall | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchCall = useCallback(async () => {
+    if (!callId) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await callsApi.getCall(callId);
+      setCall(data);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch call';
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [callId]);
+
+  useEffect(() => {
+    fetchCall();
+  }, [fetchCall]);
+
+  return { call, isLoading, error, refetch: fetchCall };
+}
+
+// -----------------------------------------------------------------------------
+// useCallMutations - Create, update, delete calls
+// -----------------------------------------------------------------------------
+
+interface UseCallMutationsReturn {
+  createCall: (data: CreateCallData) => Promise<FundingCall>;
+  updateCall: (callId: string, data: Partial<CreateCallData>) => Promise<FundingCall>;
+  updateStatus: (callId: string, status: CallStatus) => Promise<FundingCall>;
+  deleteCall: (callId: string) => Promise<void>;
+  cloneCall: (callId: string, name: string) => Promise<FundingCall>;
+  isLoading: boolean;
+  error: string | null;
+  clearError: () => void;
+}
+
+export function useCallMutations(): UseCallMutationsReturn {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const createCall = useCallback(async (data: CreateCallData): Promise<FundingCall> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const result = await callsApi.createCall(data);
+      return result;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create call';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const updateCall = useCallback(
+    async (callId: string, data: Partial<CreateCallData>): Promise<FundingCall> => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await callsApi.updateCall(callId, data);
+        return result;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to update call';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const updateStatus = useCallback(
+    async (callId: string, status: CallStatus): Promise<FundingCall> => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await callsApi.updateCallStatus(callId, status);
+        return result;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to update status';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const deleteCall = useCallback(async (callId: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await callsApi.deleteCall(callId);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete call';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const cloneCall = useCallback(
+    async (callId: string, name: string): Promise<FundingCall> => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await callsApi.cloneCall(callId, name);
+        return result;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to clone call';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  return {
+    createCall,
+    updateCall,
+    updateStatus,
+    deleteCall,
+    cloneCall,
+    isLoading,
+    error,
+    clearError,
+  };
+}

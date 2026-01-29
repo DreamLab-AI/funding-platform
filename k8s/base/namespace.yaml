@@ -1,0 +1,10 @@
+# =============================================================================
+# Kubernetes Namespace - Funding Platform
+# =============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: funding-platform
+  labels:
+    app: funding-platform
+    environment: base

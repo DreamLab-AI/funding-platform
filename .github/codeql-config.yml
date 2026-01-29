@@ -1,0 +1,32 @@
+# =============================================================================
+# CodeQL Configuration - Funding Platform
+# =============================================================================
+
+name: "CodeQL Config"
+
+# Paths to analyze
+paths:
+  - backend/src
+  - frontend/src
+
+# Paths to ignore
+paths-ignore:
+  - '**/node_modules/**'
+  - '**/dist/**'
+  - '**/build/**'
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
+  - '**/__tests__/**'
+  - '**/coverage/**'
+
+# Query packs to run
+query-filters:
+  - exclude:
+      id: js/unused-local-variable
+  - exclude:
+      id: js/trivial-conditional
+
+# Additional queries
+queries:
+  - uses: security-and-quality
+  - uses: security-extended

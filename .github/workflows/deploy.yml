@@ -1,0 +1,372 @@
+# =============================================================================
+# Deployment Pipeline
+# Funding Application Platform
+# =============================================================================
+# Triggers: Push to main (production), Push to develop (staging)
+# Actions: Deploy to staging/production environments
+# Compliance: UK/EU hosting, GDPR requirements
+# =============================================================================
+
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      version:
+        description: 'Version/tag to deploy (leave empty for latest)'
+        required: false
+        type: string
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+
+jobs:
+  # ===========================================================================
+  # Determine deployment environment
+  # ===========================================================================
+  setup:
+    name: Setup Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      version: ${{ steps.set-version.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine environment
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "environment=${{ inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine version
+        id: set-version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
+
+  # ===========================================================================
+  # Deploy to Staging
+  # ===========================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.funding-platform.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.STAGING_KUBE_CONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Deploy to Kubernetes (Staging)
+        env:
+          IMAGE_TAG: ${{ needs.setup.outputs.version }}
+          NAMESPACE: funding-platform-staging
+        run: |
+          # Update image tags in Kubernetes manifests
+          cd k8s/overlays/staging
+
+          # Apply kustomize with image substitution
+          kubectl kustomize . | \
+            sed "s|IMAGE_TAG_PLACEHOLDER|${IMAGE_TAG}|g" | \
+            kubectl apply -f - -n ${NAMESPACE}
+
+          # Wait for rollout
+          kubectl rollout status deployment/backend -n ${NAMESPACE} --timeout=300s
+          kubectl rollout status deployment/frontend -n ${NAMESPACE} --timeout=300s
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          # Run migrations via kubectl exec or dedicated job
+          kubectl exec -n funding-platform-staging deployment/backend -- \
+            npm run db:migrate
+
+      - name: Health check
+        run: |
+          # Wait for services to be healthy
+          sleep 30
+
+          # Check backend health
+          curl -f https://api-staging.funding-platform.example.com/health || exit 1
+
+          # Check frontend health
+          curl -f https://staging.funding-platform.example.com || exit 1
+
+      - name: Notify deployment success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "Staging deployment successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Staging Deployment Successful* :white_check_mark:\n*Version:* `${{ needs.setup.outputs.version }}`\n*URL:* https://staging.funding-platform.example.com"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  # ===========================================================================
+  # Deploy to Production
+  # ===========================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.environment == 'production'
+    environment:
+      name: production
+      url: https://funding-platform.example.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
+        env:
+          KUBE_CONFIG: ${{ secrets.PRODUCTION_KUBE_CONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBE_CONFIG" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Pre-deployment backup
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          BACKUP_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+        run: |
+          # Create database backup before deployment
+          TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          kubectl exec -n funding-platform-production deployment/backend -- \
+            pg_dump ${DATABASE_URL} | gzip > backup_${TIMESTAMP}.sql.gz
+
+          # Upload to S3 (if configured)
+          # aws s3 cp backup_${TIMESTAMP}.sql.gz s3://${BACKUP_BUCKET}/pre-deploy/
+
+      - name: Deploy to Kubernetes (Production)
+        env:
+          IMAGE_TAG: ${{ needs.setup.outputs.version }}
+          NAMESPACE: funding-platform-production
+        run: |
+          # Update image tags in Kubernetes manifests
+          cd k8s/overlays/production
+
+          # Apply kustomize with image substitution
+          kubectl kustomize . | \
+            sed "s|IMAGE_TAG_PLACEHOLDER|${IMAGE_TAG}|g" | \
+            kubectl apply -f - -n ${NAMESPACE}
+
+          # Wait for rollout with timeout
+          kubectl rollout status deployment/backend -n ${NAMESPACE} --timeout=600s
+          kubectl rollout status deployment/frontend -n ${NAMESPACE} --timeout=600s
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          kubectl exec -n funding-platform-production deployment/backend -- \
+            npm run db:migrate
+
+      - name: Health check
+        id: health-check
+        run: |
+          # Wait for services to be healthy
+          sleep 30
+
+          # Check backend health
+          BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.funding-platform.example.com/health)
+          if [ "$BACKEND_STATUS" != "200" ]; then
+            echo "Backend health check failed with status: $BACKEND_STATUS"
+            exit 1
+          fi
+
+          # Check frontend health
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://funding-platform.example.com)
+          if [ "$FRONTEND_STATUS" != "200" ]; then
+            echo "Frontend health check failed with status: $FRONTEND_STATUS"
+            exit 1
+          fi
+
+          echo "All health checks passed"
+
+      - name: Rollback on failure
+        if: failure() && steps.health-check.outcome == 'failure'
+        env:
+          NAMESPACE: funding-platform-production
+        run: |
+          echo "Health check failed, initiating rollback..."
+          kubectl rollout undo deployment/backend -n ${NAMESPACE}
+          kubectl rollout undo deployment/frontend -n ${NAMESPACE}
+          exit 1
+
+      - name: Create release tag
+        if: success()
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          VERSION="v$(date +%Y.%m.%d)-${{ needs.setup.outputs.version }}"
+          git tag -a "${VERSION}" -m "Production release ${VERSION}"
+          git push origin "${VERSION}"
+
+      - name: Notify deployment success
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "Production deployment successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment Successful* :rocket:\n*Version:* `${{ needs.setup.outputs.version }}`\n*URL:* https://funding-platform.example.com"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify deployment failure
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "Production deployment FAILED",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Production Deployment FAILED* :x:\n*Version:* `${{ needs.setup.outputs.version }}`\n*Commit:* ${{ github.sha }}\n*Workflow:* ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+  # ===========================================================================
+  # Post-deployment verification
+  # ===========================================================================
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [setup, deploy-staging, deploy-production]
+    if: always() && (needs.deploy-staging.result == 'success' || needs.deploy-production.result == 'success')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install test dependencies
+        run: npm install -g newman
+
+      - name: Determine environment URL
+        id: get-url
+        run: |
+          if [ "${{ needs.setup.outputs.environment }}" == "production" ]; then
+            echo "api_url=https://api.funding-platform.example.com" >> $GITHUB_OUTPUT
+            echo "web_url=https://funding-platform.example.com" >> $GITHUB_OUTPUT
+          else
+            echo "api_url=https://api-staging.funding-platform.example.com" >> $GITHUB_OUTPUT
+            echo "web_url=https://staging.funding-platform.example.com" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run API smoke tests
+        run: |
+          newman run tests/postman/smoke-tests.json \
+            --env-var "baseUrl=${{ steps.get-url.outputs.api_url }}" \
+            --reporters cli,junit \
+            --reporter-junit-export results/smoke-tests.xml
+        continue-on-error: true
+
+      - name: Upload smoke test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results
+          path: results/
+          retention-days: 30

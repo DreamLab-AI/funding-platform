@@ -1,0 +1,3459 @@
+openapi: 3.0.3
+info:
+  title: Funding Application Platform API
+  version: 1.0.0
+  description: |
+    RESTful API for the Funding Application Submission & Assessment Platform.
+
+    This API enables:
+    - **Applicants** to submit applications with uploaded files and confirmations
+    - **Coordinators** to manage funding calls, assign assessors, and view master results
+    - **Assessors** to score assigned applications against defined criteria
+
+    ## Authentication
+
+    All endpoints except public call listings require JWT Bearer authentication.
+    Service-to-service communication uses API key authentication.
+
+    ## Rate Limiting
+
+    - Standard endpoints: 100 requests/minute per user
+    - File upload endpoints: 10 requests/minute per user
+    - Export endpoints: 5 requests/minute per user
+
+    ## Timezone Handling
+
+    All timestamps are stored in UTC and returned in ISO 8601 format.
+    Deadlines are enforced in Europe/London timezone.
+  contact:
+    name: Platform Support
+    email: support@fundingplatform.example.com
+    url: https://fundingplatform.example.com/support
+  license:
+    name: Proprietary
+    url: https://fundingplatform.example.com/license
+  x-logo:
+    url: https://fundingplatform.example.com/logo.png
+    altText: Funding Platform Logo
+
+servers:
+  - url: https://api.fundingplatform.example.com/api/v1
+    description: Production server
+  - url: https://staging-api.fundingplatform.example.com/api/v1
+    description: Staging server
+  - url: http://localhost:3000/api/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Funding Calls
+    description: Funding call management and configuration
+  - name: Applications
+    description: Application submission and management
+  - name: Assessments
+    description: Assessment scoring and submission
+  - name: Assignments
+    description: Assessor assignment management
+  - name: Results
+    description: Master results and exports
+  - name: Users
+    description: User and assessor management
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ============================================================================
+  # AUTHENTICATION ENDPOINTS
+  # ============================================================================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user account
+      description: |
+        Creates a new user account. Email verification may be required before login.
+
+        By default, new users are assigned the Applicant role.
+      operationId: registerUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              email: "applicant@example.com"
+              password: "SecureP@ssw0rd123"
+              full_name: "Sarah Johnson"
+              organisation: "Example SME Ltd"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              example:
+                message: "Registration successful. Please check your email to verify your account."
+                user_id: "550e8400-e29b-41d4-a716-446655440000"
+                email: "applicant@example.com"
+                requires_verification: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "EMAIL_EXISTS"
+                  message: "An account with this email already exists"
+                  details: null
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user and obtain tokens
+      description: |
+        Authenticates a user with email and password, returning JWT access and refresh tokens.
+
+        Access tokens expire after 15 minutes. Refresh tokens expire after 7 days.
+      operationId: loginUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "coordinator@example.com"
+              password: "SecureP@ssw0rd123"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refresh_token: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+                token_type: "Bearer"
+                expires_in: 900
+                user:
+                  id: "550e8400-e29b-41d4-a716-446655440000"
+                  email: "coordinator@example.com"
+                  full_name: "James Thompson"
+                  roles:
+                    - "coordinator"
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_CREDENTIALS"
+                  message: "Invalid email or password"
+                  details: null
+        '423':
+          description: Account locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "ACCOUNT_LOCKED"
+                  message: "Account locked due to too many failed attempts. Try again in 30 minutes."
+                  details:
+                    locked_until: "2026-01-29T15:30:00Z"
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: |
+        Exchanges a valid refresh token for a new access token.
+
+        The refresh token may also be rotated (returned as a new token).
+      operationId: refreshToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            example:
+              refresh_token: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+              example:
+                access_token: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refresh_token: "bmV3IHJlZnJlc2ggdG9rZW4..."
+                token_type: "Bearer"
+                expires_in: 900
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_REFRESH_TOKEN"
+                  message: "Refresh token is invalid or has expired"
+                  details: null
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Invalidate current session
+      description: |
+        Invalidates the current access token and optionally all refresh tokens for the user.
+      operationId: logoutUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                all_sessions:
+                  type: boolean
+                  description: If true, invalidates all sessions for the user
+                  default: false
+            example:
+              all_sessions: false
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Successfully logged out"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/password/reset:
+    post:
+      tags:
+        - Authentication
+      summary: Request password reset
+      description: |
+        Sends a password reset email to the specified address if an account exists.
+
+        For security, always returns success even if email is not registered.
+      operationId: requestPasswordReset
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+            example:
+              email: "user@example.com"
+      responses:
+        '200':
+          description: Reset email sent (if account exists)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "If an account exists with this email, a password reset link has been sent."
+
+  /auth/password/change:
+    post:
+      tags:
+        - Authentication
+      summary: Change password with reset token
+      description: |
+        Changes the user's password using a valid reset token.
+      operationId: changePassword
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - new_password
+              properties:
+                token:
+                  type: string
+                  description: Password reset token from email
+                new_password:
+                  type: string
+                  format: password
+                  minLength: 12
+            example:
+              token: "reset-token-from-email"
+              new_password: "NewSecureP@ssw0rd456"
+      responses:
+        '200':
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+              example:
+                message: "Password changed successfully. Please log in with your new password."
+        '400':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_RESET_TOKEN"
+                  message: "Reset token is invalid or has expired"
+                  details: null
+
+  # ============================================================================
+  # FUNDING CALLS ENDPOINTS
+  # ============================================================================
+  /calls:
+    get:
+      tags:
+        - Funding Calls
+      summary: List funding calls
+      description: |
+        Returns a paginated list of funding calls.
+
+        - **Public users** see only Open calls
+        - **Applicants** see Open calls and their submitted applications' calls
+        - **Assessors** see calls where they have assignments
+        - **Coordinators** see all calls
+      operationId: listCalls
+      security:
+        - {}
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          description: Filter by call status
+          schema:
+            type: string
+            enum: [draft, open, closed, in_assessment, completed, archived]
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: Sort field
+          schema:
+            type: string
+            enum: [name, close_at, created_at]
+            default: close_at
+        - name: order
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        '200':
+          description: List of funding calls
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CallListResponse'
+              example:
+                data:
+                  - id: "call-001"
+                    name: "SME Growth Fund 2026"
+                    description: "Supporting small and medium enterprises..."
+                    status: "open"
+                    open_at: "2026-01-15T09:00:00Z"
+                    close_at: "2026-02-28T17:00:00Z"
+                    application_count: 45
+                    created_at: "2026-01-10T14:30:00Z"
+                pagination:
+                  page: 1
+                  per_page: 20
+                  total_items: 3
+                  total_pages: 1
+
+    post:
+      tags:
+        - Funding Calls
+      summary: Create a new funding call
+      description: |
+        Creates a new funding call in Draft status.
+
+        **Required role:** Coordinator
+      operationId: createCall
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCallRequest'
+            example:
+              name: "Innovation Grant 2026"
+              description: "Funding for innovative projects in technology and sustainability"
+              open_at: "2026-03-01T09:00:00Z"
+              close_at: "2026-04-30T17:00:00Z"
+              guidance_url: "https://example.com/guidance"
+              edi_form_url: "https://example.com/edi"
+              requirements:
+                allowed_file_types:
+                  - "application/pdf"
+                  - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                max_file_size_mb: 50
+                max_files: 10
+                required_confirmations:
+                  - "guidance_read"
+                  - "edi_completed"
+                  - "data_sharing_consent"
+              retention_days: 2555
+      responses:
+        '201':
+          description: Funding call created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /calls/{call_id}:
+    parameters:
+      - $ref: '#/components/parameters/CallId'
+
+    get:
+      tags:
+        - Funding Calls
+      summary: Get funding call details
+      description: |
+        Returns detailed information about a specific funding call.
+
+        Access depends on user role and call status.
+      operationId: getCall
+      security:
+        - {}
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Funding call details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Call'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Funding Calls
+      summary: Update funding call
+      description: |
+        Updates a funding call. Some fields cannot be modified after the call is opened.
+
+        **Required role:** Coordinator
+      operationId: updateCall
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCallRequest'
+      responses:
+        '200':
+          description: Funding call updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Call'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Conflict - cannot modify call in current status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_STATUS_TRANSITION"
+                  message: "Cannot modify close_at after call has closed"
+                  details:
+                    current_status: "closed"
+
+    delete:
+      tags:
+        - Funding Calls
+      summary: Delete funding call
+      description: |
+        Deletes a funding call. Only allowed for Draft calls with no applications.
+
+        **Required role:** Coordinator
+      operationId: deleteCall
+      responses:
+        '204':
+          description: Funding call deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot delete call with applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /calls/{call_id}/status:
+    parameters:
+      - $ref: '#/components/parameters/CallId'
+
+    patch:
+      tags:
+        - Funding Calls
+      summary: Change call status
+      description: |
+        Transitions the call to a new status.
+
+        Valid transitions:
+        - `draft` -> `open`
+        - `open` -> `closed` (automatic at deadline)
+        - `closed` -> `in_assessment`
+        - `in_assessment` -> `completed`
+        - `completed` -> `archived`
+
+        **Required role:** Coordinator
+      operationId: updateCallStatus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [open, closed, in_assessment, completed, archived]
+            example:
+              status: "open"
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Call'
+        '400':
+          description: Invalid status transition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_STATUS_TRANSITION"
+                  message: "Cannot transition from 'draft' to 'completed'"
+                  details:
+                    current_status: "draft"
+                    requested_status: "completed"
+                    valid_transitions: ["open"]
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /calls/{call_id}/clone:
+    parameters:
+      - $ref: '#/components/parameters/CallId'
+
+    post:
+      tags:
+        - Funding Calls
+      summary: Clone funding call
+      description: |
+        Creates a copy of an existing call with new dates. The clone is created in Draft status.
+
+        **Required role:** Coordinator
+      operationId: cloneCall
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - open_at
+                - close_at
+              properties:
+                name:
+                  type: string
+                  description: Name for the cloned call
+                open_at:
+                  type: string
+                  format: date-time
+                close_at:
+                  type: string
+                  format: date-time
+            example:
+              name: "SME Growth Fund 2027"
+              open_at: "2027-01-15T09:00:00Z"
+              close_at: "2027-02-28T17:00:00Z"
+      responses:
+        '201':
+          description: Call cloned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Call'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /calls/{call_id}/criteria:
+    parameters:
+      - $ref: '#/components/parameters/CallId'
+
+    get:
+      tags:
+        - Funding Calls
+      summary: Get assessment criteria for call
+      description: |
+        Returns the assessment criteria configuration for a funding call.
+      operationId: getCallCriteria
+      responses:
+        '200':
+          description: Assessment criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CriteriaConfig'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Funding Calls
+      summary: Update assessment criteria
+      description: |
+        Sets or updates the assessment criteria for a funding call.
+
+        Cannot be modified after assessments have begun.
+
+        **Required role:** Coordinator
+      operationId: updateCallCriteria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CriteriaConfig'
+            example:
+              assessors_per_application: 2
+              variance_threshold: 20
+              criteria:
+                - id: "crit-001"
+                  name: "Innovation"
+                  description: "Degree of innovation and novelty"
+                  max_points: 25
+                  weight: 1.0
+                  comments_required: true
+                - id: "crit-002"
+                  name: "Impact"
+                  description: "Potential economic and social impact"
+                  max_points: 25
+                  weight: 1.0
+                  comments_required: true
+                - id: "crit-003"
+                  name: "Feasibility"
+                  description: "Technical and financial feasibility"
+                  max_points: 25
+                  weight: 1.0
+                  comments_required: false
+                - id: "crit-004"
+                  name: "Team"
+                  description: "Quality and experience of the team"
+                  max_points: 25
+                  weight: 1.0
+                  comments_required: false
+      responses:
+        '200':
+          description: Criteria updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CriteriaConfig'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot modify criteria after assessments started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /calls/{call_id}/assessors:
+    parameters:
+      - $ref: '#/components/parameters/CallId'
+
+    get:
+      tags:
+        - Funding Calls
+      summary: Get assessor pool for call
+      description: |
+        Returns the list of assessors in the pool for this call.
+
+        **Required role:** Coordinator
+      operationId: getCallAssessors
+      parameters:
+        - name: include_stats
+          in: query
+          description: Include assignment statistics
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Assessor pool
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AssessorPoolMember'
+              example:
+                data:
+                  - id: "assessor-001"
+                    user_id: "user-456"
+                    name: "Dr. Maria Garcia"
+                    email: "maria.garcia@university.edu"
+                    organisation: "University of Example"
+                    expertise_tags:
+                      - "technology"
+                      - "sustainability"
+                    added_at: "2026-01-20T10:00:00Z"
+                    stats:
+                      assigned: 5
+                      completed: 3
+                      outstanding: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags:
+        - Funding Calls
+      summary: Add assessor to pool
+      description: |
+        Adds an assessor to the call's assessor pool.
+
+        If the user does not exist, an invitation email is sent.
+
+        **Required role:** Coordinator
+      operationId: addAssessorToPool
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - name
+              properties:
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                organisation:
+                  type: string
+                expertise_tags:
+                  type: array
+                  items:
+                    type: string
+                send_invitation:
+                  type: boolean
+                  default: true
+            example:
+              email: "new.assessor@company.com"
+              name: "John Smith"
+              organisation: "Example Corp"
+              expertise_tags:
+                - "finance"
+                - "manufacturing"
+              send_invitation: true
+      responses:
+        '201':
+          description: Assessor added to pool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessorPoolMember'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Assessor already in pool
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /calls/{call_id}/assessors/{assessor_id}:
+    parameters:
+      - $ref: '#/components/parameters/CallId'
+      - name: assessor_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    delete:
+      tags:
+        - Funding Calls
+      summary: Remove assessor from pool
+      description: |
+        Removes an assessor from the call's assessor pool.
+
+        Cannot remove if assessor has active assignments.
+
+        **Required role:** Coordinator
+      operationId: removeAssessorFromPool
+      responses:
+        '204':
+          description: Assessor removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot remove assessor with active assignments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================================================================
+  # APPLICATIONS ENDPOINTS
+  # ============================================================================
+  /applications:
+    get:
+      tags:
+        - Applications
+      summary: List applications
+      description: |
+        Returns a paginated list of applications.
+
+        - **Applicants** see only their own applications
+        - **Assessors** see only their assigned applications
+        - **Coordinators** see all applications (filtered by call if specified)
+      operationId: listApplications
+      parameters:
+        - name: call_id
+          in: query
+          description: Filter by funding call
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          description: Filter by application status
+          schema:
+            type: string
+            enum: [draft, submitted, under_review, withdrawn]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [submitted_at, applicant_name, reference]
+            default: submitted_at
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Applications
+      summary: Start a new application
+      description: |
+        Creates a new draft application for a funding call.
+
+        The call must be in Open status and before the deadline.
+      operationId: createApplication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - call_id
+              properties:
+                call_id:
+                  type: string
+                  format: uuid
+            example:
+              call_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '201':
+          description: Draft application created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          description: Call not accepting applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "CALL_NOT_OPEN"
+                  message: "This funding call is not currently accepting applications"
+                  details:
+                    call_status: "closed"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /applications/{application_id}:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+
+    get:
+      tags:
+        - Applications
+      summary: Get application details
+      description: |
+        Returns detailed information about an application.
+
+        Access is restricted based on user role and assignment.
+      operationId: getApplication
+      responses:
+        '200':
+          description: Application details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Applications
+      summary: Withdraw application
+      description: |
+        Withdraws a draft or submitted application.
+
+        Only allowed before the call deadline.
+
+        **Required role:** Applicant (owner)
+      operationId: withdrawApplication
+      responses:
+        '200':
+          description: Application withdrawn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot withdraw after deadline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /applications/{application_id}/files:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+
+    get:
+      tags:
+        - Applications
+      summary: List application files
+      description: |
+        Returns the list of files uploaded to an application.
+      operationId: listApplicationFiles
+      responses:
+        '200':
+          description: List of files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApplicationFile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags:
+        - Applications
+      summary: Upload file to application
+      description: |
+        Uploads a file to the application.
+
+        Files are virus scanned before being accepted.
+
+        Only allowed for draft applications before the deadline.
+      operationId: uploadApplicationFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The file to upload
+                file_type:
+                  type: string
+                  enum: [application_form, supporting_document, pitch_deck, video, letter_of_support, other]
+                  default: supporting_document
+                description:
+                  type: string
+                  maxLength: 500
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationFile'
+        '400':
+          description: Invalid file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "INVALID_FILE_TYPE"
+                  message: "File type 'application/x-executable' is not allowed"
+                  details:
+                    allowed_types:
+                      - "application/pdf"
+                      - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Application already submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "FILE_TOO_LARGE"
+                  message: "File exceeds maximum allowed size of 50MB"
+                  details:
+                    max_size_mb: 50
+                    file_size_mb: 75.5
+        '422':
+          description: Virus detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "VIRUS_DETECTED"
+                  message: "File failed virus scan and cannot be uploaded"
+                  details: null
+
+  /applications/{application_id}/files/{file_id}:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+      - name: file_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - Applications
+      summary: Download application file
+      description: |
+        Downloads a specific file from an application.
+
+        Access is logged for audit purposes.
+      operationId: downloadApplicationFile
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: 'attachment; filename="application-form.pdf"'
+            Content-Type:
+              schema:
+                type: string
+              example: "application/pdf"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Applications
+      summary: Delete application file
+      description: |
+        Deletes a file from a draft application.
+
+        Only allowed for draft applications before deadline.
+      operationId: deleteApplicationFile
+      responses:
+        '204':
+          description: File deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot delete from submitted application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /applications/{application_id}/confirmations:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+
+    get:
+      tags:
+        - Applications
+      summary: Get application confirmations
+      description: |
+        Returns the confirmation status for an application.
+      operationId: getApplicationConfirmations
+      responses:
+        '200':
+          description: Confirmation status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Confirmation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Applications
+      summary: Update confirmations
+      description: |
+        Updates the confirmation checkboxes for an application.
+
+        Only allowed for draft applications before deadline.
+      operationId: updateApplicationConfirmations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                guidance_read:
+                  type: boolean
+                edi_completed:
+                  type: boolean
+                data_sharing_consent:
+                  type: boolean
+            example:
+              guidance_read: true
+              edi_completed: true
+              data_sharing_consent: true
+      responses:
+        '200':
+          description: Confirmations updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Confirmation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /applications/{application_id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+
+    post:
+      tags:
+        - Applications
+      summary: Submit application
+      description: |
+        Submits a draft application.
+
+        Requirements:
+        - At least one file uploaded
+        - All required confirmations completed
+        - Before call deadline (Europe/London timezone)
+
+        On success:
+        - Application is locked
+        - Confirmation email is sent
+        - Reference number is generated
+      operationId: submitApplication
+      responses:
+        '200':
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmissionResponse'
+              example:
+                application:
+                  id: "app-001"
+                  reference: "FUND-2026-00045"
+                  status: "submitted"
+                  submitted_at: "2026-01-29T14:30:00Z"
+                message: "Your application has been submitted successfully."
+                receipt:
+                  reference: "FUND-2026-00045"
+                  call_name: "SME Growth Fund 2026"
+                  submitted_at: "2026-01-29T14:30:00Z"
+                  applicant_email: "applicant@example.com"
+                  file_count: 3
+        '400':
+          description: Submission requirements not met
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "SUBMISSION_INCOMPLETE"
+                  message: "Cannot submit application. Requirements not met."
+                  details:
+                    missing_files: true
+                    missing_confirmations:
+                      - "edi_completed"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Deadline passed or already submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "DEADLINE_PASSED"
+                  message: "The deadline for this funding call has passed"
+                  details:
+                    deadline: "2026-01-28T17:00:00Z"
+                    server_time: "2026-01-29T10:00:00Z"
+
+  /applications/{application_id}/reopen:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+
+    post:
+      tags:
+        - Applications
+      summary: Reopen submitted application
+      description: |
+        Reopens a submitted application for editing.
+
+        Only allowed before the call deadline.
+
+        **Required role:** Coordinator
+      operationId: reopenApplication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Reason for reopening
+                notify_applicant:
+                  type: boolean
+                  default: true
+            example:
+              reason: "Applicant requested to update supporting documents"
+              notify_applicant: true
+      responses:
+        '200':
+          description: Application reopened
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot reopen after deadline
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /applications/export:
+    get:
+      tags:
+        - Applications
+      summary: Export applications
+      description: |
+        Exports application metadata to CSV or XLSX format.
+
+        **Required role:** Coordinator
+      operationId: exportApplications
+      parameters:
+        - name: call_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [csv, xlsx]
+            default: xlsx
+        - name: columns
+          in: query
+          description: Comma-separated list of columns to include
+          schema:
+            type: string
+          example: "reference,applicant_name,organisation,submitted_at,file_count"
+      responses:
+        '200':
+          description: Export file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: 'attachment; filename="applications-export-2026-01-29.xlsx"'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /applications/{application_id}/download:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+
+    get:
+      tags:
+        - Applications
+      summary: Download application pack
+      description: |
+        Downloads all files for an application as a ZIP archive.
+
+        **Required role:** Coordinator or assigned Assessor
+      operationId: downloadApplicationPack
+      responses:
+        '200':
+          description: ZIP archive of application files
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: 'attachment; filename="FUND-2026-00045.zip"'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================================
+  # ASSESSMENTS ENDPOINTS
+  # ============================================================================
+  /assessments:
+    get:
+      tags:
+        - Assessments
+      summary: List assessments
+      description: |
+        Returns a paginated list of assessments.
+
+        - **Assessors** see only their own assessments
+        - **Coordinators** see all assessments for their calls
+      operationId: listAssessments
+      parameters:
+        - name: call_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: application_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: assessor_id
+          in: query
+          description: Filter by assessor (coordinator only)
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, submitted, returned]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of assessments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /assessments/{assessment_id}:
+    parameters:
+      - name: assessment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - Assessments
+      summary: Get assessment details
+      description: |
+        Returns detailed information about an assessment.
+
+        - **Assessors** can only see their own assessments
+        - **Coordinators** can see all assessments
+        - Assessors cannot see other assessors' assessments
+      operationId: getAssessment
+      responses:
+        '200':
+          description: Assessment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Assessments
+      summary: Update assessment scores
+      description: |
+        Updates the scores and comments for an assessment.
+
+        Only allowed for draft or returned assessments.
+
+        **Required role:** Assigned Assessor
+      operationId: updateAssessment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAssessmentRequest'
+            example:
+              scores:
+                - criterion_id: "crit-001"
+                  score: 22
+                  comment: "Innovative approach with clear differentiation from existing solutions."
+                - criterion_id: "crit-002"
+                  score: 20
+                  comment: "Strong potential for regional economic impact."
+                - criterion_id: "crit-003"
+                  score: 18
+                  comment: "Technical approach is sound but timeline ambitious."
+                - criterion_id: "crit-004"
+                  score: 23
+                  comment: "Experienced team with relevant track record."
+              overall_comment: "Strong application with innovative approach. Recommend for funding."
+      responses:
+        '200':
+          description: Assessment updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Assessment already submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /assessments/{assessment_id}/coi:
+    parameters:
+      - name: assessment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    put:
+      tags:
+        - Assessments
+      summary: Declare conflict of interest
+      description: |
+        Records the assessor's conflict of interest declaration.
+
+        Must be declared before assessment can be submitted.
+      operationId: declareCOI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - has_conflict
+              properties:
+                has_conflict:
+                  type: boolean
+                  description: Whether the assessor has a conflict of interest
+                conflict_details:
+                  type: string
+                  description: Details of the conflict (required if has_conflict is true)
+            example:
+              has_conflict: false
+      responses:
+        '200':
+          description: COI declaration recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+        '400':
+          description: Conflict details required when declaring conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /assessments/{assessment_id}/submit:
+    parameters:
+      - name: assessment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      tags:
+        - Assessments
+      summary: Submit assessment
+      description: |
+        Submits the assessment.
+
+        Requirements:
+        - All criteria must be scored
+        - Required comments must be provided
+        - COI must be declared
+
+        On submit, the assessment is locked and timestamped.
+      operationId: submitAssessment
+      responses:
+        '200':
+          description: Assessment submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+              example:
+                id: "assess-001"
+                assignment_id: "assign-001"
+                status: "submitted"
+                submitted_at: "2026-02-15T16:45:00Z"
+                total_score: 83
+                scores:
+                  - criterion_id: "crit-001"
+                    criterion_name: "Innovation"
+                    score: 22
+                    max_points: 25
+                    comment: "Innovative approach..."
+        '400':
+          description: Assessment incomplete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "ASSESSMENT_INCOMPLETE"
+                  message: "Cannot submit assessment. All criteria must be scored."
+                  details:
+                    missing_scores:
+                      - "crit-003"
+                    missing_comments:
+                      - "crit-001"
+                    coi_declared: false
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Assessment already submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /assessments/{assessment_id}/return:
+    parameters:
+      - name: assessment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      tags:
+        - Assessments
+      summary: Return assessment for revision
+      description: |
+        Returns a submitted assessment to the assessor for revision.
+
+        **Required role:** Coordinator
+      operationId: returnAssessment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  description: Reason for returning
+                notify_assessor:
+                  type: boolean
+                  default: true
+            example:
+              reason: "Please provide more detailed comments for the Innovation criterion."
+              notify_assessor: true
+      responses:
+        '200':
+          description: Assessment returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Assessment not in submitted status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # ============================================================================
+  # ASSIGNMENTS ENDPOINTS
+  # ============================================================================
+  /assignments:
+    get:
+      tags:
+        - Assignments
+      summary: List assignments
+      description: |
+        Returns a paginated list of assignments.
+
+        - **Assessors** see only their own assignments
+        - **Coordinators** see all assignments
+      operationId: listAssignments
+      parameters:
+        - name: call_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: assessor_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_progress, completed]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of assignments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Assignments
+      summary: Create assignment
+      description: |
+        Assigns an application to an assessor.
+
+        **Required role:** Coordinator
+      operationId: createAssignment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - application_id
+                - assessor_id
+              properties:
+                application_id:
+                  type: string
+                  format: uuid
+                assessor_id:
+                  type: string
+                  format: uuid
+                due_at:
+                  type: string
+                  format: date-time
+                  description: Optional due date for the assessment
+                notify_assessor:
+                  type: boolean
+                  default: true
+            example:
+              application_id: "550e8400-e29b-41d4-a716-446655440000"
+              assessor_id: "660e8400-e29b-41d4-a716-446655440001"
+              due_at: "2026-02-28T17:00:00Z"
+              notify_assessor: true
+      responses:
+        '201':
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Assignment already exists or conflict detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "ASSIGNMENT_EXISTS"
+                  message: "This application is already assigned to this assessor"
+                  details: null
+
+  /assignments/bulk:
+    post:
+      tags:
+        - Assignments
+      summary: Bulk assign applications
+      description: |
+        Assigns multiple applications to assessors using the specified strategy.
+
+        **Required role:** Coordinator
+      operationId: bulkAssign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - call_id
+                - strategy
+              properties:
+                call_id:
+                  type: string
+                  format: uuid
+                strategy:
+                  type: string
+                  enum: [round_robin, balanced, manual]
+                  description: |
+                    - `round_robin`: Distribute evenly across all assessors
+                    - `balanced`: Consider current workload
+                    - `manual`: Use explicit assignments array
+                assessor_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Assessors to include (if not specified, uses entire pool)
+                application_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Applications to assign (if not specified, assigns all unassigned)
+                assignments:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      application_id:
+                        type: string
+                        format: uuid
+                      assessor_id:
+                        type: string
+                        format: uuid
+                  description: Explicit assignments (for manual strategy)
+                assessors_per_application:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 2
+                notify_assessors:
+                  type: boolean
+                  default: true
+            example:
+              call_id: "550e8400-e29b-41d4-a716-446655440000"
+              strategy: "round_robin"
+              assessors_per_application: 2
+              notify_assessors: true
+      responses:
+        '200':
+          description: Bulk assignment results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: integer
+                    description: Number of assignments created
+                  skipped:
+                    type: integer
+                    description: Number of assignments skipped (already exists)
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        application_id:
+                          type: string
+                        reason:
+                          type: string
+                  assignments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+              example:
+                created: 90
+                skipped: 0
+                errors: []
+                assignments:
+                  - id: "assign-001"
+                    application_id: "app-001"
+                    assessor_id: "assessor-001"
+                    status: "pending"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /assignments/{assignment_id}:
+    parameters:
+      - name: assignment_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags:
+        - Assignments
+      summary: Get assignment details
+      operationId: getAssignment
+      responses:
+        '200':
+          description: Assignment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Assignments
+      summary: Delete assignment
+      description: |
+        Removes an assignment. Only allowed if assessment has not started.
+
+        **Required role:** Coordinator
+      operationId: deleteAssignment
+      responses:
+        '204':
+          description: Assignment deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Cannot delete assignment with started assessment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /assignments/progress:
+    get:
+      tags:
+        - Assignments
+      summary: Get assessment progress
+      description: |
+        Returns assessment progress statistics for a funding call.
+
+        **Required role:** Coordinator
+      operationId: getAssignmentProgress
+      parameters:
+        - name: call_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Progress statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressResponse'
+              example:
+                call_id: "call-001"
+                summary:
+                  total_applications: 50
+                  total_assignments: 100
+                  completed_assessments: 75
+                  outstanding_assessments: 25
+                  completion_percentage: 75.0
+                by_assessor:
+                  - assessor_id: "assessor-001"
+                    assessor_name: "Dr. Maria Garcia"
+                    assigned: 10
+                    completed: 8
+                    outstanding: 2
+                  - assessor_id: "assessor-002"
+                    assessor_name: "Prof. John Smith"
+                    assigned: 10
+                    completed: 10
+                    outstanding: 0
+                by_application:
+                  - application_id: "app-001"
+                    reference: "FUND-2026-00001"
+                    required_assessments: 2
+                    completed_assessments: 2
+                    complete: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /assignments/reminders:
+    post:
+      tags:
+        - Assignments
+      summary: Send reminder emails
+      description: |
+        Sends reminder emails to assessors with outstanding assessments.
+
+        **Required role:** Coordinator
+      operationId: sendReminders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - call_id
+              properties:
+                call_id:
+                  type: string
+                  format: uuid
+                assessor_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: Specific assessors (if not specified, sends to all with outstanding)
+                custom_message:
+                  type: string
+                  description: Optional custom message to include
+            example:
+              call_id: "550e8400-e29b-41d4-a716-446655440000"
+              custom_message: "Please complete your assessments by end of week."
+      responses:
+        '200':
+          description: Reminders sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sent_count:
+                    type: integer
+                  recipients:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        assessor_id:
+                          type: string
+                        email:
+                          type: string
+                        outstanding_count:
+                          type: integer
+              example:
+                sent_count: 5
+                recipients:
+                  - assessor_id: "assessor-001"
+                    email: "maria.garcia@university.edu"
+                    outstanding_count: 2
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ============================================================================
+  # RESULTS ENDPOINTS
+  # ============================================================================
+  /results:
+    get:
+      tags:
+        - Results
+      summary: Get master results
+      description: |
+        Returns aggregated assessment results for a funding call.
+
+        Includes per-assessor scores, calculated totals/averages, and variance flags.
+
+        **Required role:** Coordinator (results are not visible to assessors)
+      operationId: getMasterResults
+      parameters:
+        - name: call_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [total_score, average_score, variance, reference]
+            default: total_score
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Master results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MasterResultsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /results/{application_id}:
+    parameters:
+      - $ref: '#/components/parameters/ApplicationId'
+
+    get:
+      tags:
+        - Results
+      summary: Get application results
+      description: |
+        Returns detailed assessment results for a single application.
+
+        **Required role:** Coordinator
+      operationId: getApplicationResults
+      responses:
+        '200':
+          description: Application results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /results/export:
+    get:
+      tags:
+        - Results
+      summary: Export master results
+      description: |
+        Exports master results to XLSX format.
+
+        Includes all scores, aggregates, and comments.
+
+        **Required role:** Coordinator
+      operationId: exportResults
+      parameters:
+        - name: call_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: include_comments
+          in: query
+          description: Include assessor comments in export
+          schema:
+            type: boolean
+            default: true
+        - name: include_variance_flags
+          in: query
+          description: Include variance flags
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Export file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              example: 'attachment; filename="master-results-2026-01-29.xlsx"'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================================
+  # USERS ENDPOINTS
+  # ============================================================================
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user profile
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags:
+        - Users
+      summary: Update current user profile
+      operationId: updateCurrentUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                organisation:
+                  type: string
+                phone:
+                  type: string
+            example:
+              full_name: "Sarah Johnson"
+              organisation: "Example SME Ltd"
+              phone: "+44 7700 900123"
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: |
+        Returns a paginated list of users.
+
+        **Required role:** Coordinator
+      operationId: listUsers
+      parameters:
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [applicant, assessor, coordinator, scheme_owner]
+        - name: search
+          in: query
+          description: Search by name or email
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+# ==============================================================================
+# COMPONENTS
+# ==============================================================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token
+
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for service-to-service communication
+
+  parameters:
+    CallId:
+      name: call_id
+      in: path
+      required: true
+      description: Funding call UUID
+      schema:
+        type: string
+        format: uuid
+
+    ApplicationId:
+      name: application_id
+      in: path
+      required: true
+      description: Application UUID
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "VALIDATION_ERROR"
+              message: "Request validation failed"
+              details:
+                fields:
+                  - field: "email"
+                    message: "Invalid email format"
+
+    Unauthorized:
+      description: Unauthorized - authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+              details: null
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "FORBIDDEN"
+              message: "You do not have permission to perform this action"
+              details:
+                required_role: "coordinator"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "NOT_FOUND"
+              message: "Resource not found"
+              details: null
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "RATE_LIMITED"
+              message: "Too many requests. Please try again later."
+              details:
+                retry_after: 60
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until rate limit resets
+
+  schemas:
+    # --------------------------------------------------------------------------
+    # ERROR SCHEMA
+    # --------------------------------------------------------------------------
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Request validation failed"
+            details:
+              type: object
+              nullable: true
+              description: Additional error details
+              additionalProperties: true
+
+    # --------------------------------------------------------------------------
+    # PAGINATION SCHEMA
+    # --------------------------------------------------------------------------
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        per_page:
+          type: integer
+          example: 20
+        total_items:
+          type: integer
+          example: 150
+        total_pages:
+          type: integer
+          example: 8
+
+    # --------------------------------------------------------------------------
+    # AUTHENTICATION SCHEMAS
+    # --------------------------------------------------------------------------
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 12
+          description: Must contain uppercase, lowercase, number, and special character
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        organisation:
+          type: string
+          maxLength: 200
+
+    RegisterResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        user_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        requires_verification:
+          type: boolean
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        refresh_token:
+          type: string
+          description: Refresh token for obtaining new access tokens
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: Access token expiry in seconds
+        user:
+          $ref: '#/components/schemas/User'
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+
+    RefreshResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+
+    # --------------------------------------------------------------------------
+    # USER SCHEMAS
+    # --------------------------------------------------------------------------
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        full_name:
+          type: string
+        organisation:
+          type: string
+        phone:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [applicant, assessor, coordinator, scheme_owner]
+        email_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        last_login_at:
+          type: string
+          format: date-time
+
+    # --------------------------------------------------------------------------
+    # FUNDING CALL SCHEMAS
+    # --------------------------------------------------------------------------
+    Call:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [draft, open, closed, in_assessment, completed, archived]
+        open_at:
+          type: string
+          format: date-time
+        close_at:
+          type: string
+          format: date-time
+        guidance_url:
+          type: string
+          format: uri
+        edi_form_url:
+          type: string
+          format: uri
+        requirements:
+          $ref: '#/components/schemas/SubmissionRequirements'
+        criteria_config:
+          $ref: '#/components/schemas/CriteriaConfig'
+        retention_days:
+          type: integer
+          description: Data retention period in days
+        application_count:
+          type: integer
+          description: Number of applications (coordinator view only)
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CallListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Call'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    CreateCallRequest:
+      type: object
+      required:
+        - name
+        - open_at
+        - close_at
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        open_at:
+          type: string
+          format: date-time
+        close_at:
+          type: string
+          format: date-time
+        guidance_url:
+          type: string
+          format: uri
+        edi_form_url:
+          type: string
+          format: uri
+        requirements:
+          $ref: '#/components/schemas/SubmissionRequirements'
+        retention_days:
+          type: integer
+          minimum: 365
+          maximum: 3650
+          default: 2555
+
+    UpdateCallRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 5000
+        open_at:
+          type: string
+          format: date-time
+        close_at:
+          type: string
+          format: date-time
+        guidance_url:
+          type: string
+          format: uri
+        edi_form_url:
+          type: string
+          format: uri
+        requirements:
+          $ref: '#/components/schemas/SubmissionRequirements'
+
+    SubmissionRequirements:
+      type: object
+      properties:
+        allowed_file_types:
+          type: array
+          items:
+            type: string
+          description: MIME types of allowed files
+          example:
+            - "application/pdf"
+            - "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        max_file_size_mb:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+        max_files:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+        required_confirmations:
+          type: array
+          items:
+            type: string
+            enum: [guidance_read, edi_completed, data_sharing_consent]
+
+    CriteriaConfig:
+      type: object
+      properties:
+        assessors_per_application:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 2
+        variance_threshold:
+          type: number
+          minimum: 0
+          maximum: 100
+          default: 20
+          description: Percentage variance to flag
+        criteria:
+          type: array
+          items:
+            $ref: '#/components/schemas/Criterion'
+
+    Criterion:
+      type: object
+      required:
+        - id
+        - name
+        - max_points
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 1000
+        max_points:
+          type: integer
+          minimum: 1
+          maximum: 100
+        weight:
+          type: number
+          minimum: 0.1
+          maximum: 10
+          default: 1.0
+        comments_required:
+          type: boolean
+          default: false
+
+    AssessorPoolMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        organisation:
+          type: string
+        expertise_tags:
+          type: array
+          items:
+            type: string
+        added_at:
+          type: string
+          format: date-time
+        stats:
+          type: object
+          properties:
+            assigned:
+              type: integer
+            completed:
+              type: integer
+            outstanding:
+              type: integer
+
+    # --------------------------------------------------------------------------
+    # APPLICATION SCHEMAS
+    # --------------------------------------------------------------------------
+    Application:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+          description: Human-readable reference number
+          example: "FUND-2026-00045"
+        call_id:
+          type: string
+          format: uuid
+        call_name:
+          type: string
+        applicant:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+            email:
+              type: string
+              format: email
+            organisation:
+              type: string
+        status:
+          type: string
+          enum: [draft, submitted, under_review, withdrawn]
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationFile'
+        confirmations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Confirmation'
+        assignment_count:
+          type: integer
+          description: Number of assessors assigned (coordinator view)
+        assessment_count:
+          type: integer
+          description: Number of completed assessments (coordinator view)
+        submitted_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ApplicationListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Application'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ApplicationFile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        file_type:
+          type: string
+          enum: [application_form, supporting_document, pitch_deck, video, letter_of_support, other]
+        mime_type:
+          type: string
+        file_size:
+          type: integer
+          description: Size in bytes
+        description:
+          type: string
+        scan_status:
+          type: string
+          enum: [pending, clean, infected]
+        uploaded_at:
+          type: string
+          format: date-time
+
+    Confirmation:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [guidance_read, edi_completed, data_sharing_consent]
+        confirmed:
+          type: boolean
+        confirmed_at:
+          type: string
+          format: date-time
+        ip_address:
+          type: string
+          description: IP address at time of confirmation (coordinator view only)
+
+    SubmissionResponse:
+      type: object
+      properties:
+        application:
+          $ref: '#/components/schemas/Application'
+        message:
+          type: string
+        receipt:
+          type: object
+          properties:
+            reference:
+              type: string
+            call_name:
+              type: string
+            submitted_at:
+              type: string
+              format: date-time
+            applicant_email:
+              type: string
+              format: email
+            file_count:
+              type: integer
+
+    # --------------------------------------------------------------------------
+    # ASSESSMENT SCHEMAS
+    # --------------------------------------------------------------------------
+    Assessment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        assignment_id:
+          type: string
+          format: uuid
+        application_id:
+          type: string
+          format: uuid
+        application_reference:
+          type: string
+        assessor_id:
+          type: string
+          format: uuid
+          description: Only visible to coordinators
+        status:
+          type: string
+          enum: [draft, submitted, returned]
+        scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/Score'
+        total_score:
+          type: number
+          description: Sum of all criterion scores
+        weighted_score:
+          type: number
+          description: Weighted total score
+        overall_comment:
+          type: string
+        coi_declared:
+          type: boolean
+        coi_has_conflict:
+          type: boolean
+        coi_details:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AssessmentListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assessment'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    Score:
+      type: object
+      properties:
+        criterion_id:
+          type: string
+        criterion_name:
+          type: string
+        score:
+          type: integer
+        max_points:
+          type: integer
+        weight:
+          type: number
+        comment:
+          type: string
+
+    UpdateAssessmentRequest:
+      type: object
+      properties:
+        scores:
+          type: array
+          items:
+            type: object
+            required:
+              - criterion_id
+              - score
+            properties:
+              criterion_id:
+                type: string
+              score:
+                type: integer
+                minimum: 0
+              comment:
+                type: string
+                maxLength: 2000
+        overall_comment:
+          type: string
+          maxLength: 5000
+
+    # --------------------------------------------------------------------------
+    # ASSIGNMENT SCHEMAS
+    # --------------------------------------------------------------------------
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        application_id:
+          type: string
+          format: uuid
+        application_reference:
+          type: string
+        assessor_id:
+          type: string
+          format: uuid
+        assessor_name:
+          type: string
+          description: Only visible to coordinators
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+        due_at:
+          type: string
+          format: date-time
+        assigned_at:
+          type: string
+          format: date-time
+        assessment:
+          $ref: '#/components/schemas/Assessment'
+
+    AssignmentListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Assignment'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ProgressResponse:
+      type: object
+      properties:
+        call_id:
+          type: string
+          format: uuid
+        summary:
+          type: object
+          properties:
+            total_applications:
+              type: integer
+            total_assignments:
+              type: integer
+            completed_assessments:
+              type: integer
+            outstanding_assessments:
+              type: integer
+            completion_percentage:
+              type: number
+        by_assessor:
+          type: array
+          items:
+            type: object
+            properties:
+              assessor_id:
+                type: string
+                format: uuid
+              assessor_name:
+                type: string
+              assigned:
+                type: integer
+              completed:
+                type: integer
+              outstanding:
+                type: integer
+        by_application:
+          type: array
+          items:
+            type: object
+            properties:
+              application_id:
+                type: string
+                format: uuid
+              reference:
+                type: string
+              required_assessments:
+                type: integer
+              completed_assessments:
+                type: integer
+              complete:
+                type: boolean
+
+    # --------------------------------------------------------------------------
+    # RESULTS SCHEMAS
+    # --------------------------------------------------------------------------
+    MasterResultsResponse:
+      type: object
+      properties:
+        call_id:
+          type: string
+          format: uuid
+        call_name:
+          type: string
+        summary:
+          type: object
+          properties:
+            total_applications:
+              type: integer
+            fully_assessed:
+              type: integer
+            high_variance_count:
+              type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationResult'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    ApplicationResult:
+      type: object
+      properties:
+        application_id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        applicant_name:
+          type: string
+        applicant_organisation:
+          type: string
+        assessments:
+          type: array
+          items:
+            type: object
+            properties:
+              assessor_id:
+                type: string
+                format: uuid
+              assessor_name:
+                type: string
+              total_score:
+                type: number
+              scores:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Score'
+              overall_comment:
+                type: string
+              submitted_at:
+                type: string
+                format: date-time
+        aggregates:
+          type: object
+          properties:
+            total_score_sum:
+              type: number
+            total_score_average:
+              type: number
+            weighted_average:
+              type: number
+            by_criterion:
+              type: array
+              items:
+                type: object
+                properties:
+                  criterion_id:
+                    type: string
+                  criterion_name:
+                    type: string
+                  average_score:
+                    type: number
+                  max_points:
+                    type: integer
+                  variance:
+                    type: number
+        variance_flags:
+          type: array
+          items:
+            type: object
+            properties:
+              criterion_id:
+                type: string
+              criterion_name:
+                type: string
+              variance_percentage:
+                type: number
+              min_score:
+                type: number
+              max_score:
+                type: number
+        rank:
+          type: integer
+          description: Rank by average score

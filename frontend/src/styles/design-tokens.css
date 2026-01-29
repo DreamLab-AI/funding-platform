@@ -1,0 +1,339 @@
+/* =============================================================================
+   Design Tokens - Funding Application Platform
+   WCAG 2.1 AA Compliant | GOV.UK Design System Inspired
+   ============================================================================= */
+
+:root {
+  /* ---------------------------------------------------------------------------
+     Color Palette - Primary (GOV.UK Blue Scale)
+     --------------------------------------------------------------------------- */
+  --color-primary-50: #e8f1f8;
+  --color-primary-100: #c5ddef;
+  --color-primary-200: #9fc7e4;
+  --color-primary-300: #78b0d9;
+  --color-primary-400: #5a9fd1;
+  --color-primary-500: #1d70b8; /* Primary brand color */
+  --color-primary-600: #1a65a6;
+  --color-primary-700: #155490;
+  --color-primary-800: #104478;
+  --color-primary-900: #0b2e52;
+
+  /* ---------------------------------------------------------------------------
+     Color Palette - Secondary (Neutral Greys)
+     --------------------------------------------------------------------------- */
+  --color-secondary-50: #f8f9fa;
+  --color-secondary-100: #f1f3f5;
+  --color-secondary-200: #e9ecef;
+  --color-secondary-300: #dee2e6;
+  --color-secondary-400: #ced4da;
+  --color-secondary-500: #505a5f; /* Secondary text */
+  --color-secondary-600: #40484c;
+  --color-secondary-700: #303639;
+  --color-secondary-800: #212529;
+  --color-secondary-900: #0b0c0c; /* GOV.UK black */
+
+  /* ---------------------------------------------------------------------------
+     Semantic Colors - Status & Feedback
+     --------------------------------------------------------------------------- */
+  /* Success - Green */
+  --color-success-50: #e6f4eb;
+  --color-success-100: #c0e4cc;
+  --color-success-200: #96d4ab;
+  --color-success-300: #6bc48a;
+  --color-success-400: #4bb871;
+  --color-success-500: #00703c; /* GOV.UK Green */
+  --color-success-600: #006435;
+  --color-success-700: #00552d;
+  --color-success-800: #004624;
+  --color-success-900: #002e17;
+
+  /* Error - Red */
+  --color-error-50: #fbe9e7;
+  --color-error-100: #f5c8c2;
+  --color-error-200: #eea39a;
+  --color-error-300: #e77e71;
+  --color-error-400: #e26252;
+  --color-error-500: #d4351c; /* GOV.UK Red */
+  --color-error-600: #bf3019;
+  --color-error-700: #a52915;
+  --color-error-800: #8b2311;
+  --color-error-900: #611809;
+
+  /* Warning - Yellow/Amber */
+  --color-warning-50: #fff9e6;
+  --color-warning-100: #fff0bf;
+  --color-warning-200: #ffe794;
+  --color-warning-300: #ffdd69;
+  --color-warning-400: #ffd548;
+  --color-warning-500: #ffdd00; /* GOV.UK Yellow */
+  --color-warning-600: #f0d100;
+  --color-warning-700: #dcc000;
+  --color-warning-800: #c4ab00;
+  --color-warning-900: #9e8a00;
+
+  /* Info - Blue (lighter shade) */
+  --color-info-50: #e6f3fa;
+  --color-info-100: #c0e1f2;
+  --color-info-200: #96cde9;
+  --color-info-300: #6bb9e0;
+  --color-info-400: #4ca9da;
+  --color-info-500: #2e8aca;
+  --color-info-600: #267bb8;
+  --color-info-700: #1e68a0;
+  --color-info-800: #175588;
+  --color-info-900: #0d3a5c;
+
+  /* ---------------------------------------------------------------------------
+     Focus State - Accessibility Critical
+     --------------------------------------------------------------------------- */
+  --color-focus: #ffdd00;
+  --color-focus-text: #0b0c0c;
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 0px;
+
+  /* ---------------------------------------------------------------------------
+     Background Colors
+     --------------------------------------------------------------------------- */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fa;
+  --color-bg-tertiary: #f1f3f5;
+  --color-bg-elevated: #ffffff;
+  --color-bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* ---------------------------------------------------------------------------
+     Text Colors - High Contrast for Accessibility
+     --------------------------------------------------------------------------- */
+  --color-text-primary: #0b0c0c;
+  --color-text-secondary: #505a5f;
+  --color-text-tertiary: #6f777b;
+  --color-text-disabled: #b1b4b6;
+  --color-text-inverse: #ffffff;
+  --color-text-link: #1d70b8;
+  --color-text-link-hover: #003078;
+  --color-text-link-visited: #4c2c92;
+
+  /* ---------------------------------------------------------------------------
+     Border Colors
+     --------------------------------------------------------------------------- */
+  --color-border-primary: #b1b4b6;
+  --color-border-secondary: #dee2e6;
+  --color-border-focus: #0b0c0c;
+  --color-border-error: #d4351c;
+  --color-border-success: #00703c;
+
+  /* ---------------------------------------------------------------------------
+     Typography Scale
+     --------------------------------------------------------------------------- */
+  /* Font Families */
+  --font-family-sans: 'GDS Transport', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'Fira Code', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+
+  /* Font Sizes - Using rem for accessibility */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 1.875rem;    /* 30px */
+  --font-size-4xl: 2.25rem;     /* 36px */
+  --font-size-5xl: 3rem;        /* 48px */
+
+  /* Line Heights */
+  --line-height-none: 1;
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+  --line-height-loose: 2;
+
+  /* Font Weights */
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Letter Spacing */
+  --letter-spacing-tighter: -0.05em;
+  --letter-spacing-tight: -0.025em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.025em;
+  --letter-spacing-wider: 0.05em;
+
+  /* ---------------------------------------------------------------------------
+     Spacing Scale (8px base unit)
+     --------------------------------------------------------------------------- */
+  --space-0: 0;
+  --space-px: 1px;
+  --space-0-5: 0.125rem;  /* 2px */
+  --space-1: 0.25rem;     /* 4px */
+  --space-1-5: 0.375rem;  /* 6px */
+  --space-2: 0.5rem;      /* 8px */
+  --space-2-5: 0.625rem;  /* 10px */
+  --space-3: 0.75rem;     /* 12px */
+  --space-3-5: 0.875rem;  /* 14px */
+  --space-4: 1rem;        /* 16px */
+  --space-5: 1.25rem;     /* 20px */
+  --space-6: 1.5rem;      /* 24px */
+  --space-7: 1.75rem;     /* 28px */
+  --space-8: 2rem;        /* 32px */
+  --space-9: 2.25rem;     /* 36px */
+  --space-10: 2.5rem;     /* 40px */
+  --space-11: 2.75rem;    /* 44px */
+  --space-12: 3rem;       /* 48px */
+  --space-14: 3.5rem;     /* 56px */
+  --space-16: 4rem;       /* 64px */
+  --space-20: 5rem;       /* 80px */
+  --space-24: 6rem;       /* 96px */
+  --space-28: 7rem;       /* 112px */
+  --space-32: 8rem;       /* 128px */
+
+  /* ---------------------------------------------------------------------------
+     Border Radius
+     --------------------------------------------------------------------------- */
+  --radius-none: 0;
+  --radius-sm: 0.125rem;  /* 2px */
+  --radius-default: 0.25rem; /* 4px */
+  --radius-md: 0.375rem;  /* 6px */
+  --radius-lg: 0.5rem;    /* 8px */
+  --radius-xl: 0.75rem;   /* 12px */
+  --radius-2xl: 1rem;     /* 16px */
+  --radius-3xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;
+
+  /* ---------------------------------------------------------------------------
+     Box Shadows
+     --------------------------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --shadow-inner: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+  --shadow-focus: 0 0 0 3px var(--color-focus);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 4px 12px 0 rgb(0 0 0 / 0.12), 0 2px 6px -2px rgb(0 0 0 / 0.08);
+
+  /* ---------------------------------------------------------------------------
+     Z-Index Scale
+     --------------------------------------------------------------------------- */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+
+  /* ---------------------------------------------------------------------------
+     Transitions & Animation
+     --------------------------------------------------------------------------- */
+  /* Duration */
+  --duration-instant: 0ms;
+  --duration-fast: 100ms;
+  --duration-normal: 150ms;
+  --duration-moderate: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 400ms;
+  --duration-slowest: 500ms;
+
+  /* Easing */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ---------------------------------------------------------------------------
+     Layout
+     --------------------------------------------------------------------------- */
+  --max-width-xs: 20rem;      /* 320px */
+  --max-width-sm: 24rem;      /* 384px */
+  --max-width-md: 28rem;      /* 448px */
+  --max-width-lg: 32rem;      /* 512px */
+  --max-width-xl: 36rem;      /* 576px */
+  --max-width-2xl: 42rem;     /* 672px */
+  --max-width-3xl: 48rem;     /* 768px */
+  --max-width-4xl: 56rem;     /* 896px */
+  --max-width-5xl: 64rem;     /* 1024px */
+  --max-width-6xl: 72rem;     /* 1152px */
+  --max-width-7xl: 80rem;     /* 1280px */
+  --max-width-full: 100%;
+  --max-width-prose: 65ch;
+
+  /* ---------------------------------------------------------------------------
+     Breakpoints (for reference, use Tailwind classes)
+     --------------------------------------------------------------------------- */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* =============================================================================
+   Dark Mode Theme
+   ============================================================================= */
+
+[data-theme="dark"] {
+  /* Background Colors */
+  --color-bg-primary: #1a1a2e;
+  --color-bg-secondary: #16213e;
+  --color-bg-tertiary: #0f0f23;
+  --color-bg-elevated: #1f1f3d;
+  --color-bg-overlay: rgba(0, 0, 0, 0.75);
+
+  /* Text Colors */
+  --color-text-primary: #f8f9fa;
+  --color-text-secondary: #b1b4b6;
+  --color-text-tertiary: #8e9196;
+  --color-text-disabled: #505a5f;
+  --color-text-inverse: #0b0c0c;
+  --color-text-link: #73b8ff;
+  --color-text-link-hover: #a3d0ff;
+  --color-text-link-visited: #b794f6;
+
+  /* Border Colors */
+  --color-border-primary: #3d3d5c;
+  --color-border-secondary: #2d2d4a;
+
+  /* Adjusted Primary Colors for dark mode */
+  --color-primary-500: #4d9de0;
+  --color-primary-600: #3a8ed4;
+
+  /* Card Shadow for dark mode */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+  --shadow-card-hover: 0 4px 12px 0 rgb(0 0 0 / 0.4), 0 2px 6px -2px rgb(0 0 0 / 0.3);
+}
+
+/* =============================================================================
+   High Contrast Mode Support
+   ============================================================================= */
+
+@media (prefers-contrast: high) {
+  :root {
+    --color-text-primary: #000000;
+    --color-text-secondary: #1a1a1a;
+    --color-border-primary: #000000;
+    --color-border-secondary: #333333;
+  }
+}
+
+/* =============================================================================
+   Reduced Motion Support
+   ============================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-moderate: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+    --duration-slowest: 0ms;
+  }
+}

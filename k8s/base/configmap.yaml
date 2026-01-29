@@ -1,0 +1,37 @@
+# =============================================================================
+# ConfigMap - Funding Platform
+# Non-sensitive configuration shared across services
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: funding-platform-config
+  namespace: funding-platform
+  labels:
+    app: funding-platform
+data:
+  # Application settings
+  NODE_ENV: "production"
+  API_VERSION: "v1"
+  TZ: "Europe/London"
+
+  # Logging
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+
+  # Rate limiting
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"
+
+  # File upload limits
+  MAX_FILE_SIZE_MB: "50"
+
+  # Session timeout (30 minutes as per PRD)
+  SESSION_TIMEOUT_MS: "1800000"
+
+  # Data retention (7 years as per PRD)
+  DATA_RETENTION_YEARS: "7"
+
+  # ClamAV settings
+  CLAMAV_HOST: "clamav-service"
+  CLAMAV_PORT: "3310"

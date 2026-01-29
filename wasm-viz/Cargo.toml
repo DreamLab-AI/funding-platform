@@ -1,0 +1,70 @@
+[package]
+name = "funding-viz"
+version = "0.1.0"
+edition = "2021"
+authors = ["Funding Platform Team"]
+description = "High-performance WebAssembly visualizations for funding application platform"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[dependencies]
+# WASM bindings
+wasm-bindgen = "0.2.92"
+wasm-bindgen-futures = "0.4.42"
+
+# Web APIs
+web-sys = { version = "0.3.69", features = [
+    "CanvasRenderingContext2d",
+    "Document",
+    "Element",
+    "HtmlCanvasElement",
+    "HtmlElement",
+    "MouseEvent",
+    "Window",
+    "Performance",
+    "DomRect",
+    "CssStyleDeclaration",
+    "EventTarget",
+    "AddEventListenerOptions",
+    "WheelEvent",
+    "TouchEvent",
+    "TouchList",
+    "Touch",
+    "KeyboardEvent",
+] }
+js-sys = "0.3.69"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+serde_json = "1.0"
+
+# Error handling
+console_error_panic_hook = { version = "0.1.7", optional = true }
+
+# Math utilities
+nalgebra = "0.32"
+
+# Color handling
+palette = "0.7"
+
+# Profiling (wasm-compatible)
+instant = { version = "0.1", features = ["wasm-bindgen"] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.42"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+# Optimize for size in release builds
+[profile.release.package."*"]
+opt-level = "z"

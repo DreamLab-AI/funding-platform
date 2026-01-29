@@ -1,0 +1,32 @@
+# =============================================================================
+# Persistent Volume Claims - Funding Platform
+# =============================================================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: funding-platform-uploads
+  namespace: funding-platform
+  labels:
+    app: funding-platform
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: funding-platform-postgres
+  namespace: funding-platform
+  labels:
+    app: funding-platform
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 20Gi
