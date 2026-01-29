@@ -3,15 +3,15 @@
    Import this file in your main entry point (main.tsx)
    ============================================================================= */
 
+/* Design System - @import must come first */
+@import './design-tokens.css';
+@import './components.css';
+@import './animations.css';
+
 /* Tailwind Base, Components, Utilities */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Design System */
-@import './design-tokens.css';
-@import './components.css';
-@import './animations.css';
 
 /* Custom Base Styles */
 @layer base {

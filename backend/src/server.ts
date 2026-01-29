@@ -14,7 +14,7 @@ async function startServer() {
     // Start server
     const server = app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT}`);
-      logger.info(`Environment: ${config.nodeEnv}`);
+      logger.info(`Environment: ${config.env}`);
       logger.info(`API Base URL: http://localhost:${PORT}/api/v1`);
       logger.info(`Health check: http://localhost:${PORT}/health`);
     });

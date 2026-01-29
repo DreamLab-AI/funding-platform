@@ -94,3 +94,6 @@ export function InlineLoader({ message }: InlineLoaderProps) {
 export function ButtonLoader() {
   return <LoadingSpinner size="sm" color="white" className="mr-2" />;
 }
+
+// Default export for compatibility
+export default LoadingSpinner;

@@ -108,14 +108,14 @@ apiClient.interceptors.response.use(
 // -----------------------------------------------------------------------------
 
 function buildQueryParams(
-  filters?: Record<string, unknown>,
+  filters?: object,
   pagination?: PaginationOptions,
   sort?: SortOptions
 ): string {
   const params = new URLSearchParams();
 
   if (filters) {
-    Object.entries(filters).forEach(([key, value]) => {
+    Object.entries(filters as Record<string, unknown>).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         params.append(key, String(value));
       }

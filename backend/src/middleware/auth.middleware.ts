@@ -48,7 +48,7 @@ export function generateAccessToken(user: AuthenticatedUser): string {
   };
 
   return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn,
+    expiresIn: config.jwt.expiresIn as jwt.SignOptions['expiresIn'],
   });
 }
 
@@ -64,7 +64,7 @@ export function generateRefreshToken(user: AuthenticatedUser): string {
   };
 
   return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.refreshExpiresIn,
+    expiresIn: config.jwt.refreshExpiresIn as jwt.SignOptions['expiresIn'],
   });
 }
 
@@ -91,6 +91,7 @@ export function authenticate(
 
     req.user = {
       user_id: payload.user_id,
+      id: payload.user_id,
       email: payload.email,
       role: payload.role,
       first_name: '',
@@ -120,6 +121,7 @@ export function optionalAuth(
       if (payload.type === 'access') {
         req.user = {
           user_id: payload.user_id,
+          id: payload.user_id,
           email: payload.email,
           role: payload.role,
           first_name: '',
@@ -165,6 +167,7 @@ export async function refreshToken(
 
     const authenticatedUser: AuthenticatedUser = {
       user_id: user.user_id,
+      id: user.user_id,
       email: user.email,
       role: user.role,
       first_name: user.first_name,
@@ -222,7 +225,8 @@ export function createTokenPair(user: AuthenticatedUser) {
   };
 }
 
-export default {
+// Named export for routes using { authMiddleware }
+export const authMiddleware = {
   authenticate,
   optionalAuth,
   refreshToken,
@@ -230,3 +234,5 @@ export default {
   generateRefreshToken,
   createTokenPair,
 };
+
+export default authMiddleware;

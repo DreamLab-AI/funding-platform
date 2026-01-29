@@ -26,8 +26,8 @@ import { verifyNip05 } from './nip05';
 // Constants
 // -----------------------------------------------------------------------------
 
-const AUTH_EVENT_WINDOW_SECONDS = 60; // Events must be within 60 seconds
-const CHALLENGE_EXPIRY_SECONDS = 300; // 5 minutes
+export const AUTH_EVENT_WINDOW_SECONDS = 60; // Events must be within 60 seconds
+export const CHALLENGE_EXPIRY_SECONDS = 300; // 5 minutes
 
 // -----------------------------------------------------------------------------
 // NIP-98 HTTP Authentication
@@ -479,24 +479,4 @@ export async function unlinkNostrIdentity(
   }
 }
 
-// -----------------------------------------------------------------------------
-// Exports
-// -----------------------------------------------------------------------------
-
-export {
-  AUTH_EVENT_WINDOW_SECONDS,
-  CHALLENGE_EXPIRY_SECONDS,
-  createNip98AuthEvent,
-  createNip98AuthHeader,
-  parseNip98AuthHeader,
-  verifyNip98AuthEvent,
-  generateAuthChallenge,
-  createChallengeResponseEvent,
-  signChallengeResponse,
-  verifyChallengeResponse,
-  initiateNostrLogin,
-  completeNostrLogin,
-  nostrLogin,
-  linkNostrIdentity,
-  unlinkNostrIdentity,
-};
+// All functions already exported inline with 'export' keyword

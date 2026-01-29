@@ -37,14 +37,14 @@ router.use(authenticate);
  */
 router.get(
   '/status',
-  requireRole([UserRole.COORDINATOR, UserRole.ADMIN]),
+  requireRole(UserRole.COORDINATOR, UserRole.ADMIN),
   async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const service = getAIService();
       const status = await service.getStatus();
       const usage = service.getUsageStats();
 
-      res.json({
+      return res.json({
         success: true,
         data: {
           ...status,
@@ -52,7 +52,7 @@ router.get(
         },
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -63,14 +63,14 @@ router.get(
  */
 router.get(
   '/providers',
-  requireRole([UserRole.COORDINATOR, UserRole.ADMIN]),
+  requireRole(UserRole.COORDINATOR, UserRole.ADMIN),
   async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const service = getAIService();
       const providers = service.listProviders();
       const activeProvider = service.getActiveProvider();
 
-      res.json({
+      return res.json({
         success: true,
         data: {
           providers,
@@ -78,7 +78,7 @@ router.get(
         },
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -89,7 +89,7 @@ router.get(
  */
 router.post(
   '/provider',
-  requireRole([UserRole.ADMIN]),
+  requireRole(UserRole.ADMIN),
   body('provider').isIn(['openai', 'anthropic', 'ollama', 'lmstudio', 'custom']),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -109,12 +109,12 @@ router.post(
         userId: req.user?.user_id,
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: { activeProvider: req.body.provider },
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -129,7 +129,7 @@ router.post(
  */
 router.post(
   '/summarize/:applicationId',
-  requireRole([UserRole.COORDINATOR, UserRole.ASSESSOR, UserRole.ADMIN]),
+  requireRole(UserRole.COORDINATOR, UserRole.ASSESSOR, UserRole.ADMIN),
   param('applicationId').isUUID(),
   body('maxLength').optional().isInt({ min: 50, max: 1000 }),
   body('focusAreas').optional().isArray(),
@@ -166,12 +166,12 @@ router.post(
         focusAreas,
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: summary,
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -186,7 +186,7 @@ router.post(
  */
 router.post(
   '/scoring-assist/:applicationId',
-  requireRole([UserRole.COORDINATOR, UserRole.ASSESSOR, UserRole.ADMIN]),
+  requireRole(UserRole.COORDINATOR, UserRole.ASSESSOR, UserRole.ADMIN),
   param('applicationId').isUUID(),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -232,12 +232,12 @@ router.post(
         })),
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: suggestions,
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -252,7 +252,7 @@ router.post(
  */
 router.post(
   '/anomalies/:callId',
-  requireRole([UserRole.COORDINATOR, UserRole.ADMIN]),
+  requireRole(UserRole.COORDINATOR, UserRole.ADMIN),
   param('callId').isUUID(),
   body('threshold').optional().isFloat({ min: 5, max: 50 }),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -290,12 +290,12 @@ router.post(
         threshold,
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: anomalies,
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -310,7 +310,7 @@ router.post(
  */
 router.post(
   '/similar/:applicationId',
-  requireRole([UserRole.COORDINATOR, UserRole.ADMIN]),
+  requireRole(UserRole.COORDINATOR, UserRole.ADMIN),
   param('applicationId').isUUID(),
   body('topK').optional().isInt({ min: 1, max: 20 }),
   body('minSimilarity').optional().isFloat({ min: 0, max: 1 }),
@@ -335,12 +335,12 @@ router.post(
         callId,
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: results,
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -351,7 +351,7 @@ router.post(
  */
 router.post(
   '/index/:callId',
-  requireRole([UserRole.COORDINATOR, UserRole.ADMIN]),
+  requireRole(UserRole.COORDINATOR, UserRole.ADMIN),
   param('callId').isUUID(),
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
@@ -399,12 +399,12 @@ router.post(
         userId: req.user?.user_id,
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: result,
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -415,17 +415,17 @@ router.post(
  */
 router.get(
   '/index/stats',
-  requireRole([UserRole.COORDINATOR, UserRole.ADMIN]),
+  requireRole(UserRole.COORDINATOR, UserRole.ADMIN),
   async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const stats = getIndexStats();
 
-      res.json({
+      return res.json({
         success: true,
         data: stats,
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );
@@ -440,7 +440,7 @@ router.get(
  */
 router.post(
   '/generate',
-  requireRole([UserRole.ADMIN]),
+  requireRole(UserRole.ADMIN),
   body('prompt').isString().isLength({ min: 1, max: 10000 }),
   body('systemPrompt').optional().isString().isLength({ max: 2000 }),
   body('maxTokens').optional().isInt({ min: 10, max: 4000 }),
@@ -465,12 +465,12 @@ router.post(
         useCache: false,
       });
 
-      res.json({
+      return res.json({
         success: true,
         data: { text: result },
       });
     } catch (error) {
-      next(error);
+      return void next(error);
     }
   }
 );

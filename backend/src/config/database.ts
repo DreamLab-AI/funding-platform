@@ -97,11 +97,15 @@ export const closePool = async (): Promise<void> => {
   logger.info('Database pool closed');
 };
 
+// Alias for backward compatibility
+export const testConnection = healthCheck;
+
 export default {
   pool,
   query,
   getClient,
   transaction,
   healthCheck,
+  testConnection,
   closePool,
 };

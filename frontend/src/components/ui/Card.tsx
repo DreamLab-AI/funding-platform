@@ -25,7 +25,7 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
   rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export interface CardHeaderProps extends HTMLAttributes<HTMLDivElement> {
+export interface CardHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
   /** Header title */
   title?: ReactNode;
   /** Header subtitle */

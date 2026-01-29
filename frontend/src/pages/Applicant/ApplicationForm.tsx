@@ -15,8 +15,14 @@ import { InlineLoader } from '../../components/Common/LoadingSpinner';
 import { ConfirmModal } from '../../components/Common/Modal';
 import { ConfirmationType, ApplicationStatus } from '../../types';
 
+interface ConfirmationsData {
+  [ConfirmationType.GUIDANCE_READ]: boolean;
+  [ConfirmationType.EDI_COMPLETED]: boolean;
+  [ConfirmationType.DATA_SHARING_CONSENT]: boolean;
+}
+
 interface FormData {
-  confirmations: Record<ConfirmationType, boolean>;
+  confirmations: ConfirmationsData;
 }
 
 const STEPS = [
@@ -114,7 +120,9 @@ export function ApplicationForm() {
   };
 
   const handleConfirmationChange = (type: ConfirmationType, checked: boolean) => {
-    setValue(`confirmations.${type}`, checked);
+    // Update nested confirmation field using type-safe path
+    const currentConfirmations = { ...confirmations, [type]: checked };
+    setValue('confirmations', currentConfirmations as ConfirmationsData);
   };
 
   const handleSubmit = async () => {

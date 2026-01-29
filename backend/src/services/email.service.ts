@@ -365,4 +365,15 @@ This is an automated message. Please do not reply to this email.
   }
 }
 
+// Proxy object that delegates to static methods
+export const emailService = {
+  sendSubmissionReceipt: EmailService.sendSubmissionReceipt,
+  sendAssessorAssignment: EmailService.sendAssessorAssignment,
+  sendAssignmentNotification: EmailService.sendAssessorAssignment, // Alias
+  sendReminder: EmailService.sendReminder,
+  sendReminderEmail: EmailService.sendReminder, // Alias
+  sendBulkReminders: EmailService.sendBulkReminders,
+  verifyConfiguration: EmailService.verifyConfiguration,
+};
+
 export default EmailService;

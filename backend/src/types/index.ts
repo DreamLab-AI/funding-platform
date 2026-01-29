@@ -165,6 +165,7 @@ export interface UserPublic {
 
 export interface AuthenticatedUser {
   user_id: string;
+  id: string; // Alias for user_id for Express compatibility
   email: string;
   role: UserRole;
   first_name: string;
@@ -234,7 +235,7 @@ export interface FundingCallUpdateInput {
   close_at?: Date;
   status?: CallStatus;
   submission_requirements?: Partial<SubmissionRequirements>;
-  criteria?: Criterion[];
+  criteria?: Partial<Criterion>[];
   required_assessors_per_application?: number;
   variance_threshold?: number;
   retention_years?: number;

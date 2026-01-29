@@ -73,7 +73,7 @@ export async function signEvent(
   const { sign } = await importSecp256k1();
 
   const idBytes = hexToBytes(id);
-  const signature = sign(idBytes, privateKey);
+  const signature = await sign(idBytes, privateKey);
 
   return {
     ...event,
@@ -428,32 +428,4 @@ export function cloneEvent<T extends NostrEvent | UnsignedNostrEvent>(event: T):
   return JSON.parse(JSON.stringify(event));
 }
 
-// -----------------------------------------------------------------------------
-// Exports
-// -----------------------------------------------------------------------------
-
-export {
-  calculateEventId,
-  verifyEventId,
-  signEvent,
-  signEventWithExtension,
-  signEventAuto,
-  verifyEventSignature,
-  verifyEvent,
-  createUnsignedEvent,
-  createMetadataEvent,
-  createTextNoteEvent,
-  createAuthEvent,
-  getEventTags,
-  getEventTagValue,
-  getEventTagValues,
-  hasEventTag,
-  addEventTag,
-  removeEventTags,
-  isEventExpired,
-  isEventTimestampValid,
-  isEventInTimeWindow,
-  serializeEvent,
-  deserializeEvent,
-  cloneEvent,
-};
+// All functions already exported inline with 'export' keyword

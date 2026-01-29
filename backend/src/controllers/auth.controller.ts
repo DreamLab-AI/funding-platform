@@ -48,6 +48,7 @@ export const register = asyncHandler(
     // Generate tokens
     const authUser: AuthenticatedUser = {
       user_id: user.user_id,
+      id: user.user_id,
       email: user.email,
       role: user.role,
       first_name: user.first_name,
@@ -104,6 +105,7 @@ export const login = asyncHandler(
     // Generate tokens
     const authUser: AuthenticatedUser = {
       user_id: user.user_id,
+      id: user.user_id,
       email: user.email,
       role: user.role,
       first_name: user.first_name,
@@ -258,7 +260,8 @@ export const refreshAccessToken = asyncHandler(
   }
 );
 
-export default {
+// Named export for index.ts re-export
+export const authController = {
   register,
   login,
   logout,
@@ -267,3 +270,5 @@ export default {
   changePassword,
   refreshAccessToken,
 };
+
+export default authController;

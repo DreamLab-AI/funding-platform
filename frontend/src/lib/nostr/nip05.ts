@@ -328,23 +328,4 @@ export function extractNip05FromProfile(profile: Record<string, unknown>): strin
   return null;
 }
 
-// -----------------------------------------------------------------------------
-// Exports
-// -----------------------------------------------------------------------------
-
-export {
-  parseNip05Identifier,
-  formatNip05Identifier,
-  getNip05Url,
-  fetchNip05,
-  verifyNip05,
-  lookupPubkeyByNip05,
-  getNip05Relays,
-  discoverNip05ByDomain,
-  domainSupportsNip05,
-  clearNip05Cache,
-  removeFromNip05Cache,
-  getNip05CacheStats,
-  looksLikeNip05,
-  extractNip05FromProfile,
-};
+// All functions already exported inline with 'export' keyword

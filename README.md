@@ -25,32 +25,112 @@ This platform provides a complete solution for organizations managing competitiv
 - **GDPR Compliant** - Full audit logging, data export, and privacy controls
 - **WCAG 2.1 AA** - Accessibility-first design system
 
+## Screenshots
+
+<details>
+<summary><strong>📸 Click to expand screenshots</strong></summary>
+
+### Applicant Views
+
+<table>
+<tr>
+<td width="50%">
+
+**Open Funding Calls**
+
+Browse available funding opportunities with deadline badges and application counts.
+
+![Calls List](docs/screenshots/01-calls-list.png)
+
+</td>
+<td width="50%">
+
+**Landing Page**
+
+GOV.UK-styled landing with navigation, search, and quick access to opportunities.
+
+![Landing Page](docs/screenshots/01-landing-page.png)
+
+</td>
+</tr>
+</table>
+
+### Coordinator Dashboard
+
+<table>
+<tr>
+<td width="50%">
+
+**Dashboard Sidebar**
+
+Full management sidebar with navigation and pending item badges.
+
+![Coordinator Dashboard](docs/screenshots/02-coordinator-dashboard.png)
+
+</td>
+<td width="50%">
+
+**AI Settings Panel**
+
+Model-agnostic AI configuration with provider selection and feature toggles.
+
+![AI Settings](docs/screenshots/03-ai-settings.png)
+
+</td>
+</tr>
+</table>
+
+### Authentication
+
+<table>
+<tr>
+<td width="100%">
+
+**Auth Layout**
+
+Clean authentication interface supporting both JWT and Nostr DID login methods.
+
+![Login](docs/screenshots/04-login.png)
+
+</td>
+</tr>
+</table>
+
+</details>
+
+---
+
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Frontend (React + TypeScript)            │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │   Nostr     │  │   Design    │  │   WASM Visualizations   │  │
-│  │  DID Auth   │  │   System    │  │    (Rust + plotters)    │  │
-│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Backend (Node.js + Express)                  │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────┐  │
-│  │   REST   │  │   RBAC   │  │  Audit   │  │  Model-Agnostic │  │
-│  │   API    │  │ Middleware│  │  Logger  │  │      AI        │  │
-│  └──────────┘  └──────────┘  └──────────┘  └────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-        ┌──────────┐   ┌──────────┐   ┌──────────┐
-        │PostgreSQL│   │  Redis   │   │  AWS S3  │
-        │   15+    │   │  Cache   │   │  Storage │
-        └──────────┘   └──────────┘   └──────────┘
+```mermaid
+flowchart TB
+    subgraph Frontend["Frontend (React 18 + TypeScript + Vite)"]
+        NostrAuth[Nostr DID Auth<br/>NIP-05/07/98]
+        DesignSystem[Design System<br/>WCAG 2.1 AA]
+        WASMViz[WASM Visualizations<br/>Rust + plotters]
+    end
+
+    subgraph Backend["Backend (Node.js + Express + TypeScript)"]
+        API[REST API<br/>OpenAPI 3.0]
+        RBAC[RBAC Middleware<br/>5 Roles]
+        Audit[Audit Logger<br/>GDPR Compliant]
+        AI[Model-Agnostic AI<br/>OpenAI/Anthropic/Ollama]
+    end
+
+    subgraph DataLayer["Data Layer"]
+        Postgres[(PostgreSQL 15<br/>UUID PKs)]
+        Redis[(Redis 7<br/>Sessions/Cache)]
+        S3[(AWS S3<br/>File Storage)]
+    end
+
+    Frontend --> Backend
+    Backend --> Postgres
+    Backend --> Redis
+    Backend --> S3
+
+    style Frontend fill:#e1f5fe,stroke:#01579b
+    style Backend fill:#fff3e0,stroke:#e65100
+    style DataLayer fill:#f3e5f5,stroke:#7b1fa2
 ```
 
 ## Technology Stack
@@ -392,6 +472,24 @@ AI_DEFAULT_PROVIDER=openai
 - **Anonymization** - Support for anonymizing exported results
 
 ## Development
+
+### Test Coverage: 1,672 Tests
+
+<details>
+<summary><strong>🧪 Click to view test breakdown</strong></summary>
+
+| Category | Files | Tests | Coverage |
+|----------|-------|-------|----------|
+| **Unit - Security** | 6 | ~313 | RBAC, JWT, Nostr DID, Audit |
+| **Unit - Services** | 4 | ~167 | Scoring, File, Email, Export |
+| **Unit - Utils** | 6 | ~380 | Validation, Logger, Helpers |
+| **Unit - AI** | 7 | ~237 | Router, Similarity, Anomaly |
+| **Unit - Models** | 5 | ~215 | User, Application, Assessment |
+| **Unit - Controllers** | 5 | ~170 | Auth, Calls, Applications |
+| **Integration** | 7 | ~190 | E2E flows, GDPR compliance |
+| **Total** | **40** | **1,672** | ✅ All Passing |
+
+</details>
 
 ### Running Tests
 

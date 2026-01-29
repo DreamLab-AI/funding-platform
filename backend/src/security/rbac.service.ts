@@ -8,6 +8,13 @@ import { UserRole, Permission, AuthUser, JWTPayload } from '../types/security.ty
 import { RBAC_CONFIG } from '../config/security';
 
 /**
+ * Helper to get user ID from either AuthUser (id) or JWTPayload (sub)
+ */
+function getUserId(user: AuthUser | JWTPayload): string {
+  return 'sub' in user ? user.sub : user.id;
+}
+
+/**
  * Role-Permission mapping based on PRD Section 4.1
  */
 const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -211,10 +218,10 @@ export class RBACService {
     const isOwnPermission = permission.includes(':own');
     if (isOwnPermission) {
       // Check if user owns the resource
-      if (resource.ownerId !== user.sub) {
+      if (resource.ownerId !== getUserId(user)) {
         // For assessors, also check if they are assigned
         if (user.role === UserRole.ASSESSOR && resource.assignedAssessorIds) {
-          if (!resource.assignedAssessorIds.includes(user.sub)) {
+          if (!resource.assignedAssessorIds.includes(getUserId(user))) {
             return {
               granted: false,
               reason: 'You can only access resources assigned to you',
@@ -248,7 +255,7 @@ export class RBACService {
 
     // Applicants can only access their own applications
     if (user.role === UserRole.APPLICANT) {
-      if (applicationOwnerId === user.sub) {
+      if (applicationOwnerId === getUserId(user)) {
         return { granted: true };
       }
       return {
@@ -259,7 +266,7 @@ export class RBACService {
 
     // Assessors can only access assigned applications
     if (user.role === UserRole.ASSESSOR) {
-      if (assignedAssessorIds?.includes(user.sub)) {
+      if (assignedAssessorIds?.includes(getUserId(user))) {
         return { granted: true };
       }
       return {
@@ -295,7 +302,7 @@ export class RBACService {
 
     // Assessors can only access their own assessments
     if (user.role === UserRole.ASSESSOR) {
-      if (assessmentOwnerId === user.sub) {
+      if (assessmentOwnerId === getUserId(user)) {
         return { granted: true };
       }
       // Cannot see other assessors' assessments
@@ -377,7 +384,7 @@ export class RBACService {
     isBeforeDeadline: boolean
   ): AccessControlResult {
     // Must be the owner
-    if (user.sub !== applicationOwnerId) {
+    if (getUserId(user) !== applicationOwnerId) {
       return {
         granted: false,
         reason: 'You can only submit your own applications',
@@ -411,7 +418,7 @@ export class RBACService {
     assignmentAssessorId: string
   ): AccessControlResult {
     // Must be the assigned assessor
-    if (user.sub !== assignmentAssessorId) {
+    if (getUserId(user) !== assignmentAssessorId) {
       return {
         granted: false,
         reason: 'You can only submit assessments for your assigned applications',
@@ -456,7 +463,7 @@ export class RBACService {
       case UserRole.APPLICANT:
         return {
           canAccessAll: false,
-          ownerId: user.sub,
+          ownerId: getUserId(user),
         };
 
       case UserRole.ASSESSOR:
@@ -468,7 +475,7 @@ export class RBACService {
       default:
         return {
           canAccessAll: false,
-          ownerId: user.sub,
+          ownerId: getUserId(user),
         };
     }
   }

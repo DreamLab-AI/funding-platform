@@ -331,4 +331,20 @@ export class FileService {
   }
 }
 
+// Proxy object that delegates to static methods
+export const fileService = {
+  uploadFile: FileService.uploadFile,
+  getFile: FileService.getFile,
+  getSignedDownloadUrl: FileService.getSignedDownloadUrl,
+  deleteFile: FileService.deleteFile,
+  fileExists: FileService.fileExists,
+  createZipArchive: FileService.createZipArchive,
+  createArchive: FileService.createZipArchive, // Alias
+  createApplicationZip: FileService.createApplicationZip,
+  scanFile: FileService.scanFile,
+  getFileMetadata: FileService.getFileMetadata,
+  getUploadDir: FileService.getUploadDir,
+  isS3Configured: FileService.isS3Configured,
+};
+
 export default FileService;

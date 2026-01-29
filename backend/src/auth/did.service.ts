@@ -19,7 +19,12 @@ export interface DIDVerificationMethod {
 export interface DIDService {
   id: string;
   type: string;
-  serviceEndpoint: string | Record<string, string>;
+  serviceEndpoint: string | string[] | Record<string, string>;
+}
+
+interface Nip05Response {
+  names?: Record<string, string>;
+  relays?: Record<string, string[]>;
 }
 
 export interface NostrDIDDocument {
@@ -212,7 +217,7 @@ export async function verifyNip05(
       return result;
     }
 
-    const data = await response.json();
+    const data = await response.json() as Nip05Response;
 
     if (!data || typeof data !== 'object' || !data.names || typeof data.names !== 'object') {
       const result: Nip05VerificationResult = {

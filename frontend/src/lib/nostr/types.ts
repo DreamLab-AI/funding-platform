@@ -180,7 +180,7 @@ export interface DIDVerificationMethod {
 export interface DIDService {
   id: string;
   type: string;
-  serviceEndpoint: string | Record<string, string>;
+  serviceEndpoint: string | string[] | Record<string, string>;
 }
 
 /**
@@ -360,31 +360,4 @@ export interface RelayPoolConfig {
 // Export all types
 // -----------------------------------------------------------------------------
 
-export type {
-  NostrTag,
-  NostrEvent,
-  UnsignedNostrEvent,
-  NostrFilter,
-  NostrRelayMessage,
-  NostrClientMessage,
-  NostrProfileMetadata,
-  Nip05Response,
-  Nip05Identifier,
-  Nip98AuthPayload,
-  Nip98AuthEvent,
-  DIDVerificationMethod,
-  DIDService,
-  NostrDIDDocument,
-  DIDResolutionResult,
-  NostrKeypair,
-  NostrIdentity,
-  NostrWindowExtension,
-  NostrAuthChallenge,
-  NostrLoginRequest,
-  NostrLoginResponse,
-  LinkNostrRequest,
-  RelayConnection,
-  RelayPoolConfig,
-};
-
-export { NostrEventKind, RelayConnectionStatus };
+// All types and enums already exported inline with 'export' keyword

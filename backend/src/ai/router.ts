@@ -71,7 +71,7 @@ export class AIRouter {
       this.activeProvider = this.config.defaultProvider;
       logger.info(`Active AI provider: ${this.config.defaultProvider}`);
     } else if (this.providers.size > 0) {
-      this.activeProvider = this.providers.keys().next().value;
+      this.activeProvider = this.providers.keys().next().value ?? null;
       logger.info(`Active AI provider (auto-selected): ${this.activeProvider}`);
     }
   }

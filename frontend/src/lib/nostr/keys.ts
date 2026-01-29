@@ -14,7 +14,7 @@ const SECP256K1_ORDER = BigInt('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A0
 const BECH32_CHARS = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
 
 // Human-readable prefixes for Nostr
-const HRP = {
+export const HRP = {
   NPUB: 'npub',
   NSEC: 'nsec',
   NOTE: 'note',
@@ -470,26 +470,29 @@ export function parseToHexPubkey(input: string): string {
  * Dynamic import of secp256k1 implementation
  * This allows for code splitting and lazy loading
  */
-async function importSecp256k1(): Promise<{
+export async function importSecp256k1(): Promise<{
   getPublicKey: (privateKey: string) => string;
-  sign: (message: Uint8Array, privateKey: string) => Uint8Array;
+  sign: (message: Uint8Array, privateKey: string) => Promise<Uint8Array>;
   verify: (signature: Uint8Array, message: Uint8Array, publicKey: string) => boolean;
 }> {
-  // In production, this would import @noble/secp256k1
-  // For now, we provide a stub that requires the library to be installed
+  // Use @noble/secp256k1 v3 API
   try {
     const secp = await import('@noble/secp256k1');
     return {
       getPublicKey: (privateKey: string) => {
-        const pubkeyBytes = secp.getPublicKey(privateKey, true);
+        const privKeyBytes = hexToBytes(privateKey);
+        const pubkeyBytes = secp.getPublicKey(privKeyBytes, true);
         // Return x-coordinate only (32 bytes) for Nostr
         return bytesToHex(pubkeyBytes.slice(1));
       },
-      sign: (message: Uint8Array, privateKey: string) => {
-        return secp.signSync(message, privateKey);
+      sign: async (message: Uint8Array, privateKey: string) => {
+        const privKeyBytes = hexToBytes(privateKey);
+        // signAsync returns compact 64-byte signature as Uint8Array
+        return await secp.signAsync(message, privKeyBytes);
       },
       verify: (signature: Uint8Array, message: Uint8Array, publicKey: string) => {
-        return secp.verify(signature, message, publicKey);
+        const pubKeyBytes = hexToBytes(publicKey);
+        return secp.verify(signature, message, pubKeyBytes);
       },
     };
   } catch {
@@ -497,11 +500,4 @@ async function importSecp256k1(): Promise<{
   }
 }
 
-// -----------------------------------------------------------------------------
-// Exports
-// -----------------------------------------------------------------------------
-
-export {
-  HRP,
-  importSecp256k1,
-};
+// All functions and constants exported inline with 'export' keyword

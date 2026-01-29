@@ -275,8 +275,13 @@ export const assignmentsController = {
 
       await emailService.sendReminderEmail(
         assignment.rows[0].email,
-        assignment.rows[0].reference_number,
-        assignment.rows[0].due_at
+        {
+          assessor_name: assignment.rows[0].first_name || 'Assessor',
+          call_name: assignment.rows[0].reference_number,
+          outstanding_count: 1,
+          due_at: assignment.rows[0].due_at,
+          login_url: `${process.env.FRONTEND_URL}/login`,
+        }
       );
 
       // Update reminder sent timestamp
@@ -308,8 +313,13 @@ export const assignmentsController = {
       for (const assignment of assignments.rows) {
         await emailService.sendReminderEmail(
           assignment.email,
-          assignment.reference_number,
-          assignment.due_at
+          {
+            assessor_name: assignment.first_name || 'Assessor',
+            call_name: assignment.reference_number,
+            outstanding_count: 1,
+            due_at: assignment.due_at,
+            login_url: `${process.env.FRONTEND_URL}/login`,
+          }
         );
         await pool.query(
           'UPDATE assignments SET reminder_sent_at = NOW() WHERE id = $1',

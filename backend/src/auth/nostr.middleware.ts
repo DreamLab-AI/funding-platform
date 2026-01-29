@@ -102,6 +102,7 @@ export async function authenticateNostr(
     // Set request user
     req.user = {
       user_id: user.user_id,
+      id: user.user_id,
       email: user.email,
       role: user.role,
       first_name: user.first_name,
@@ -264,6 +265,7 @@ export async function loginWithNostr(
     // Generate tokens
     const authUser: AuthenticatedUser = {
       user_id: user.user_id,
+      id: user.user_id,
       email: user.email,
       role: user.role,
       first_name: user.first_name,
@@ -275,7 +277,7 @@ export async function loginWithNostr(
     const response: LoginResponse = {
       success: true,
       data: {
-        user: UserModel.toPublic(user),
+        user: { ...UserModel.toPublic(user) } as Record<string, unknown>,
         access_token: tokens.accessToken,
         refresh_token: tokens.refreshToken,
         expires_in: tokens.expiresIn,

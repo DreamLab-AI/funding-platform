@@ -39,7 +39,7 @@ router.post(
         error: { code: 'VALIDATION_ERROR', message: 'Invalid request', details: errors.array() },
       });
     }
-    next();
+    return void next();
   },
   NostrMiddleware.getChallenge
 );
@@ -92,7 +92,7 @@ router.post(
         error: { code: 'VALIDATION_ERROR', message: 'Invalid request', details: errors.array() },
       });
     }
-    next();
+    return void next();
   },
   NostrMiddleware.loginWithNostr
 );
@@ -115,13 +115,14 @@ router.get(
     .isString()
     .matches(/^did:nostr:[0-9a-f]{64}$/i)
     .withMessage('Invalid DID format'),
-  (req, res, next) => {
+  (req, res, next): void => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: { code: 'VALIDATION_ERROR', message: 'Invalid DID format', details: errors.array() },
       });
+      return;
     }
     next();
   },
@@ -160,7 +161,7 @@ router.post(
         error: { code: 'VALIDATION_ERROR', message: 'Invalid request', details: errors.array() },
       });
     }
-    next();
+    return void next();
   },
   NostrMiddleware.getLinkChallenge
 );
@@ -215,7 +216,7 @@ router.post(
         error: { code: 'VALIDATION_ERROR', message: 'Invalid request', details: errors.array() },
       });
     }
-    next();
+    return void next();
   },
   NostrMiddleware.linkNostrIdentity
 );

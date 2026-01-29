@@ -136,7 +136,7 @@ interface ConfirmationCheckboxGroupProps {
   disabled?: boolean;
   guidanceUrl?: string;
   ediUrl?: string;
-  errors?: Record<ConfirmationType, string>;
+  errors?: Partial<Record<ConfirmationType, string>>;
 }
 
 export function ConfirmationCheckboxGroup({

@@ -13,7 +13,7 @@ export type { CardProps, CardHeaderProps, CardBodyProps, CardFooterProps, CardIm
 
 // Badge
 export { Badge, StatusBadge, CounterBadge, BadgeGroup, PriorityBadge } from './Badge';
-export type { BadgeProps, StatusBadgeProps, CounterBadgeProps, BadgeGroupProps, PriorityBadgeProps, BadgeVariant, BadgeSize } from './Badge';
+export type { BadgeProps, BadgeVariant, BadgeSize } from './Badge';
 
 // Avatar
 export { Avatar, AvatarGroup, AvatarWithName, SkeletonAvatar } from './Avatar';
@@ -29,7 +29,7 @@ export type { StepperProps, StepperProviderProps, StepContentProps, StepperNavig
 
 // Tooltip
 export { Tooltip, InfoTooltip, HelpTextTooltip } from './Tooltip';
-export type { TooltipProps, InfoTooltipProps, HelpTextTooltipProps, TooltipPosition } from './Tooltip';
+export type { TooltipProps, InfoTooltipProps, HelpTextTooltipProps, TooltipPlacement } from './Tooltip';
 
 // Dialog
 export { Dialog, DialogBody, DialogFooter, ConfirmDialog, AlertDialog } from './Dialog';
@@ -40,12 +40,12 @@ export { ToastProvider, useToast, toast, setToastCallback } from './Toast';
 export type { ToastProviderProps, Toast, ToastType, ToastPosition, ToastContextValue } from './Toast';
 
 // DataTable
-export { DataTable, Pagination } from './DataTable';
-export type { DataTableProps, DataTableColumn, PaginationProps, SortDirection, PaginationInfo } from './DataTable';
+export { DataTable } from './DataTable';
+export type { DataTableProps, Column as DataTableColumn } from './DataTable';
 
 // FileUpload
-export { FileUpload, FilePreviewItem, DropzoneArea } from './FileUpload';
-export type { FileUploadProps, FilePreviewItemProps, DropzoneAreaProps, UploadedFile, FileValidationError } from './FileUpload';
+export { FileUpload } from './FileUpload';
+export type { FileUploadProps, UploadedFile } from './FileUpload';
 
 // ScoreInput
 export { ScoreInput, ScoreSummary } from './ScoreInput';

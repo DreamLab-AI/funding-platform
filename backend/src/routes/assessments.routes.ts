@@ -1,39 +1,38 @@
 import { Router } from 'express';
 import { assessmentsController } from '../controllers/assessments.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { rbacMiddleware } from '../middleware/rbac.middleware';
-import { validateRequest } from '../middleware/validation.middleware';
+import { authenticate } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/rbac.middleware';
+import { validate } from '../middleware/validation.middleware';
 import { z } from 'zod';
+import { UserRole } from '../types';
 
 const router = Router();
 
 // Validation schemas
 const scoreSchema = z.object({
-  body: z.object({
-    scores: z.array(z.object({
-      criterionId: z.string().uuid(),
-      score: z.number().min(0),
-      comment: z.string().max(5000).optional(),
-    })),
-    overallComment: z.string().max(10000).optional(),
-    coiConfirmed: z.boolean(),
-  }),
+  scores: z.array(z.object({
+    criterionId: z.string().uuid(),
+    score: z.number().min(0),
+    comment: z.string().max(5000).optional(),
+  })),
+  overallComment: z.string().max(10000).optional(),
+  coiConfirmed: z.boolean(),
 });
 
 // Protected routes
-router.use(authMiddleware);
+router.use(authenticate);
 
 // Assessor routes
-router.get('/my', rbacMiddleware(['assessor']), assessmentsController.getMyAssessments);
-router.get('/assignment/:assignmentId', rbacMiddleware(['assessor']), assessmentsController.getByAssignment);
-router.post('/assignment/:assignmentId', rbacMiddleware(['assessor']), validateRequest(scoreSchema), assessmentsController.submitAssessment);
-router.put('/assignment/:assignmentId', rbacMiddleware(['assessor']), validateRequest(scoreSchema), assessmentsController.updateDraft);
-router.post('/assignment/:assignmentId/submit', rbacMiddleware(['assessor']), assessmentsController.finalSubmit);
+router.get('/my', requireRoles(UserRole.ASSESSOR), assessmentsController.getMyAssessments);
+router.get('/assignment/:assignmentId', requireRoles(UserRole.ASSESSOR), assessmentsController.getByAssignment);
+router.post('/assignment/:assignmentId', requireRoles(UserRole.ASSESSOR), validate(scoreSchema), assessmentsController.submitAssessment);
+router.put('/assignment/:assignmentId', requireRoles(UserRole.ASSESSOR), validate(scoreSchema), assessmentsController.updateDraft);
+router.post('/assignment/:assignmentId/submit', requireRoles(UserRole.ASSESSOR), assessmentsController.finalSubmit);
 
 // Coordinator routes
-router.get('/', rbacMiddleware(['coordinator', 'admin']), assessmentsController.list);
-router.get('/call/:callId', rbacMiddleware(['coordinator', 'admin']), assessmentsController.listByCall);
-router.get('/application/:applicationId', rbacMiddleware(['coordinator', 'admin']), assessmentsController.listByApplication);
-router.post('/:id/return', rbacMiddleware(['coordinator', 'admin']), assessmentsController.returnForRevision);
+router.get('/', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), assessmentsController.list);
+router.get('/call/:callId', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), assessmentsController.listByCall);
+router.get('/application/:applicationId', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), assessmentsController.listByApplication);
+router.post('/:id/return', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), assessmentsController.returnForRevision);
 
 export default router;

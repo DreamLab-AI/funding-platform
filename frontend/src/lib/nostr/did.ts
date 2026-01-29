@@ -18,8 +18,8 @@ import { verifyNip05 } from './nip05';
 // DID Method Constants
 // -----------------------------------------------------------------------------
 
-const DID_METHOD = 'nostr';
-const DID_CONTEXT = [
+export const DID_METHOD = 'nostr';
+export const DID_CONTEXT = [
   'https://www.w3.org/ns/did/v1',
   'https://w3id.org/security/suites/secp256k1-2019/v1',
 ];
@@ -425,20 +425,4 @@ export function extractPubkeyFromDIDDocument(document: NostrDIDDocument): string
   return null;
 }
 
-// -----------------------------------------------------------------------------
-// Exports
-// -----------------------------------------------------------------------------
-
-export {
-  DID_METHOD,
-  DID_CONTEXT,
-  pubkeyToDid,
-  didToPubkey,
-  isValidNostrDid,
-  generateDIDDocument,
-  resolveNostrDid,
-  createNostrIdentity,
-  updateNostrIdentity,
-  verifyDIDDocument,
-  extractPubkeyFromDIDDocument,
-};
+// All functions already exported inline with 'export' keyword

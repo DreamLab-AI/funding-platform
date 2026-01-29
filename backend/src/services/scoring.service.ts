@@ -370,4 +370,17 @@ export class ScoringService {
   }
 }
 
+// Proxy object that delegates to static methods
+export const scoringService = {
+  calculateApplicationResult: ScoringService.calculateApplicationResult,
+  getMasterResults: ScoringService.getMasterResults,
+  getCallProgress: ScoringService.getCallProgress,
+  calculateAssessorTotal: ScoringService.calculateAssessorTotal,
+  calculateTotal: ScoringService.calculateAssessorTotal, // Alias
+  calculateBreakdown: ScoringService.calculateAssessorTotal, // Alias
+  validateScores: ScoringService.validateScores,
+  getAssessorsWithOutstanding: ScoringService.getAssessorsWithOutstanding,
+  rankResults: ScoringService.rankResults,
+};
+
 export default ScoringService;

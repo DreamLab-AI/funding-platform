@@ -158,7 +158,7 @@ export class JWTService {
       sessionId,
     };
 
-    return this.generateToken(payload, this.accessSecret);
+    return this.generateToken(payload as unknown as Record<string, unknown>, this.accessSecret);
   }
 
   /**
@@ -185,7 +185,7 @@ export class JWTService {
     familyInfo.lastUsed = new Date();
     refreshTokenFamilies.set(family, familyInfo);
 
-    return this.generateToken(payload, this.refreshSecret);
+    return this.generateToken(payload as unknown as Record<string, unknown>, this.refreshSecret);
   }
 
   /**

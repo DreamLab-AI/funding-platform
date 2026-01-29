@@ -68,8 +68,8 @@ export const assessmentsController = {
         throw new AppError('Assignment not found', 404);
       }
 
-      // Calculate total score
-      const totalScore = scoringService.calculateTotal(scores);
+      // Calculate total score (simple sum)
+      const totalScore = scores.reduce((sum: number, s: { score: number }) => sum + s.score, 0);
 
       const result = await pool.query(
         `INSERT INTO assessments (id, assignment_id, scores, overall_comment, coi_confirmed, total_score, status)
@@ -93,7 +93,8 @@ export const assessmentsController = {
       const { scores, overallComment, coiConfirmed } = req.body;
       const userId = req.user!.id;
 
-      const totalScore = scoringService.calculateTotal(scores);
+      // Calculate total score (simple sum)
+      const totalScore = scores.reduce((sum: number, s: { score: number }) => sum + s.score, 0);
 
       const result = await pool.query(
         `UPDATE assessments

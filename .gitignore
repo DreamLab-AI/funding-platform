@@ -63,3 +63,6 @@ wasm-viz/target/
 *.key
 credentials.json
 service-account.json
+
+# Test uploads
+backend/uploads/

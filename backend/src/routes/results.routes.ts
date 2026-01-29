@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { resultsController } from '../controllers/results.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { rbacMiddleware } from '../middleware/rbac.middleware';
+import { authenticate } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/rbac.middleware';
+import { UserRole } from '../types';
 
 const router = Router();
 
 // All routes require authentication and coordinator role
-router.use(authMiddleware);
-router.use(rbacMiddleware(['coordinator', 'admin', 'scheme_owner']));
+router.use(authenticate);
+router.use(requireRoles(UserRole.COORDINATOR, UserRole.ADMIN));
 
 // Master results
 router.get('/call/:callId', resultsController.getMasterResults);

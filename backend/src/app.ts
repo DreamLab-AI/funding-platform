@@ -34,7 +34,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: config.corsOrigins,
+  origin: config.cors.origin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
@@ -58,7 +58,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(compression());
 
 // Logging
-if (config.nodeEnv !== 'test') {
+if (config.env !== 'test') {
   app.use(morgan('combined'));
 }
 

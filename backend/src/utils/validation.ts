@@ -251,7 +251,7 @@ export function validateData<T extends z.ZodSchema>(
   return schema.parse(data);
 }
 
-export function validatePartialData<T extends z.ZodSchema>(
+export function validatePartialData<T extends z.ZodObject<z.ZodRawShape>>(
   schema: T,
   data: unknown
 ): Partial<z.infer<T>> {

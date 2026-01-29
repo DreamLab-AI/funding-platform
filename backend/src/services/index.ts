@@ -5,9 +5,23 @@ export { ExportService } from './export.service';
 
 // AI Service exports
 export { AIService, getAIService, resetAIService } from '../ai/ai.service';
+
+// AI Feature function exports (named exports of individual feature functions)
 export {
-  SummarizeFeature,
-  ScoringAssistFeature,
-  AnomalyDetectionFeature,
-  SimilarityFeature,
+  summarizeApplication,
+  generateBriefSummary,
+  extractThemes,
+  comparativeAnalysis,
+  generateScoringSuggestions,
+  suggestCriterionScore,
+  analyzeScoreConsistency,
+  suggestFeedback,
+  detectScoringAnomalies,
+  detectApplicationAnomalies,
+  findSimilarApplications,
+  indexApplication,
+  removeFromIndex,
+  batchIndexApplications,
+  getIndexStats,
+  clearIndex,
 } from '../ai/features';

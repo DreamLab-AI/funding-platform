@@ -324,4 +324,42 @@ export class ExportService {
   }
 }
 
+/**
+ * Convert generic data array to CSV string
+ */
+function genericToCSV(data: Record<string, unknown>[]): string {
+  if (data.length === 0) return '';
+
+  const headers = Object.keys(data[0]);
+  const rows = data.map(row =>
+    headers.map(h => {
+      const val = row[h];
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      return str.includes(',') || str.includes('"') || str.includes('\n')
+        ? `"${str.replace(/"/g, '""')}"`
+        : str;
+    }).join(',')
+  );
+
+  return [headers.join(','), ...rows].join('\n');
+}
+
+/**
+ * Convert generic data array to detailed CSV string (same as toCSV for generic data)
+ */
+function genericToDetailedCSV(data: Record<string, unknown>[]): string {
+  return genericToCSV(data);
+}
+
+// Proxy object that delegates to static methods
+export const exportService = {
+  exportApplicationsToXlsx: ExportService.exportApplicationsToXlsx,
+  exportApplicationsToCsv: ExportService.exportApplicationsToCsv,
+  toCSV: genericToCSV,
+  exportMasterResultsToXlsx: ExportService.exportMasterResultsToXlsx,
+  toDetailedCSV: genericToDetailedCSV,
+  exportApplications: ExportService.exportApplications,
+};
+
 export default ExportService;

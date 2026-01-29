@@ -172,42 +172,67 @@ interface StatusBadgeProps extends Omit<BadgeProps, 'variant'> {
   showDot?: boolean;
 }
 
-const statusConfig: Record<StatusType, { variant: BadgeVariant; label: string }> = {
-  // Application Status
-  [ApplicationStatus.DRAFT]: { variant: 'default', label: 'Draft' },
-  [ApplicationStatus.SUBMITTED]: { variant: 'info', label: 'Submitted' },
-  [ApplicationStatus.UNDER_REVIEW]: { variant: 'warning', label: 'Under Review' },
-  [ApplicationStatus.ASSESSED]: { variant: 'success', label: 'Assessed' },
-  [ApplicationStatus.WITHDRAWN]: { variant: 'error', label: 'Withdrawn' },
+// Status config using string values - with fallback handling for duplicate values
+function getStatusConfig(status: StatusType): { variant: BadgeVariant; label: string } {
+  // Map status values to their display config
+  const statusStr = String(status);
 
-  // Call Status
-  [CallStatus.DRAFT]: { variant: 'default', label: 'Draft' },
-  [CallStatus.OPEN]: { variant: 'success', label: 'Open' },
-  [CallStatus.CLOSED]: { variant: 'default', label: 'Closed' },
-  [CallStatus.IN_ASSESSMENT]: { variant: 'primary', label: 'In Assessment' },
-  [CallStatus.COMPLETED]: { variant: 'success', label: 'Completed' },
-  [CallStatus.ARCHIVED]: { variant: 'secondary', label: 'Archived' },
+  switch (statusStr) {
+    // Draft state - context-agnostic
+    case 'draft':
+      return { variant: 'default', label: 'Draft' };
 
-  // Assignment Status
-  [AssignmentStatus.PENDING]: { variant: 'warning', label: 'Pending' },
-  [AssignmentStatus.IN_PROGRESS]: { variant: 'info', label: 'In Progress' },
-  [AssignmentStatus.COMPLETED]: { variant: 'success', label: 'Completed' },
-  [AssignmentStatus.RETURNED]: { variant: 'error', label: 'Returned' },
+    // Submitted states
+    case 'submitted':
+      return { variant: 'info', label: 'Submitted' };
 
-  // Assessment Status
-  [AssessmentStatus.DRAFT]: { variant: 'default', label: 'Draft' },
-  [AssessmentStatus.SUBMITTED]: { variant: 'success', label: 'Submitted' },
-  [AssessmentStatus.RETURNED]: { variant: 'warning', label: 'Returned' },
+    // In progress states
+    case 'under_review':
+      return { variant: 'warning', label: 'Under Review' };
+    case 'in_assessment':
+      return { variant: 'primary', label: 'In Assessment' };
+    case 'in_progress':
+      return { variant: 'info', label: 'In Progress' };
 
-  // File Scan Status
-  [FileScanStatus.PENDING]: { variant: 'warning', label: 'Scanning...' },
-  [FileScanStatus.CLEAN]: { variant: 'success', label: 'Verified' },
-  [FileScanStatus.INFECTED]: { variant: 'error', label: 'Rejected' },
-  [FileScanStatus.ERROR]: { variant: 'error', label: 'Error' },
-};
+    // Completed states
+    case 'assessed':
+      return { variant: 'success', label: 'Assessed' };
+    case 'completed':
+      return { variant: 'success', label: 'Completed' };
+    case 'clean':
+      return { variant: 'success', label: 'Verified' };
+
+    // Warning states
+    case 'pending':
+      return { variant: 'warning', label: 'Pending' };
+    case 'returned':
+      return { variant: 'warning', label: 'Returned' };
+
+    // Success states
+    case 'open':
+      return { variant: 'success', label: 'Open' };
+
+    // Error states
+    case 'withdrawn':
+      return { variant: 'error', label: 'Withdrawn' };
+    case 'infected':
+      return { variant: 'error', label: 'Rejected' };
+    case 'error':
+      return { variant: 'error', label: 'Error' };
+
+    // Default states
+    case 'closed':
+      return { variant: 'default', label: 'Closed' };
+    case 'archived':
+      return { variant: 'secondary', label: 'Archived' };
+
+    default:
+      return { variant: 'default', label: statusStr };
+  }
+}
 
 export function StatusBadge({ status, showDot = true, ...props }: StatusBadgeProps) {
-  const config = statusConfig[status];
+  const config = getStatusConfig(status);
 
   if (!config) {
     console.warn(`Unknown status: ${status}`);

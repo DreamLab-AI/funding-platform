@@ -1,13 +1,14 @@
 import { Router } from 'express';
 import { applicationsController } from '../controllers/applications.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { rbacMiddleware } from '../middleware/rbac.middleware';
-import { uploadMiddleware } from '../middleware/upload.middleware';
+import { authenticate } from '../middleware/auth.middleware';
+import { requireRoles } from '../middleware/rbac.middleware';
+import { uploadMultiple } from '../middleware/upload.middleware';
+import { UserRole } from '../types';
 
 const router = Router();
 
 // Protected routes
-router.use(authMiddleware);
+router.use(authenticate);
 
 // Applicant routes
 router.post('/', applicationsController.create);
@@ -17,7 +18,7 @@ router.put('/:id', applicationsController.update);
 router.delete('/:id', applicationsController.withdraw);
 
 // File upload
-router.post('/:id/files', uploadMiddleware.array('files', 10), applicationsController.uploadFiles);
+router.post('/:id/files', uploadMultiple, applicationsController.uploadFiles);
 router.delete('/:id/files/:fileId', applicationsController.deleteFile);
 router.get('/:id/files/:fileId/download', applicationsController.downloadFile);
 
@@ -29,14 +30,14 @@ router.get('/:id/confirmations', applicationsController.getConfirmations);
 router.post('/:id/submit', applicationsController.submit);
 
 // Coordinator routes
-router.get('/', rbacMiddleware(['coordinator', 'admin']), applicationsController.list);
-router.get('/call/:callId', rbacMiddleware(['coordinator', 'admin']), applicationsController.listByCall);
-router.get('/export/:callId', rbacMiddleware(['coordinator', 'admin']), applicationsController.exportMetadata);
-router.get('/download/:callId', rbacMiddleware(['coordinator', 'admin']), applicationsController.downloadAllFiles);
-router.post('/:id/reopen', rbacMiddleware(['coordinator', 'admin']), applicationsController.reopen);
+router.get('/', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), applicationsController.list);
+router.get('/call/:callId', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), applicationsController.listByCall);
+router.get('/export/:callId', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), applicationsController.exportMetadata);
+router.get('/download/:callId', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), applicationsController.downloadAllFiles);
+router.post('/:id/reopen', requireRoles(UserRole.COORDINATOR, UserRole.ADMIN), applicationsController.reopen);
 
 // Assessor routes - view assigned applications
-router.get('/assigned', rbacMiddleware(['assessor']), applicationsController.getAssignedApplications);
-router.get('/:id/materials', rbacMiddleware(['assessor', 'coordinator', 'admin']), applicationsController.getMaterials);
+router.get('/assigned', requireRoles(UserRole.ASSESSOR), applicationsController.getAssignedApplications);
+router.get('/:id/materials', requireRoles(UserRole.ASSESSOR, UserRole.COORDINATOR, UserRole.ADMIN), applicationsController.getMaterials);
 
 export default router;

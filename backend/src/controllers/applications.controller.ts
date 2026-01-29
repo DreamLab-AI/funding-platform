@@ -134,8 +134,8 @@ export const applicationsController = {
 
   async deleteFile(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id, fileId } = req.params;
-      await fileService.deleteFile(fileId, id);
+      const { fileId } = req.params;
+      await fileService.deleteFile(fileId);
       res.json({ success: true, message: 'File deleted' });
     } catch (error) {
       next(error);
@@ -144,11 +144,11 @@ export const applicationsController = {
 
   async downloadFile(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id, fileId } = req.params;
-      const file = await fileService.getFile(fileId, id);
-      res.setHeader('Content-Type', file.mimeType);
-      res.setHeader('Content-Disposition', `attachment; filename="${file.filename}"`);
-      res.send(file.data);
+      const { fileId } = req.params;
+      const fileBuffer = await fileService.getFile(fileId);
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${fileId}"`);
+      res.send(fileBuffer);
     } catch (error) {
       next(error);
     }
@@ -289,10 +289,20 @@ export const applicationsController = {
   async downloadAllFiles(req: Request, res: Response, next: NextFunction) {
     try {
       const { callId } = req.params;
-      const archive = await fileService.createArchive(callId);
+      // Get list of files for the call from database
+      const filesResult = await pool.query<{ file_path: string; filename: string }>(
+        `SELECT af.file_path, af.filename
+         FROM application_files af
+         JOIN applications a ON af.application_id = a.id
+         WHERE a.call_id = $1`,
+        [callId]
+      );
+
+      const files = filesResult.rows.map(f => ({ name: f.filename, path: f.file_path }));
+      const archive = await fileService.createArchive(files);
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader('Content-Disposition', `attachment; filename="applications-${callId}.zip"`);
-      archive.pipe(res);
+      res.send(archive);
     } catch (error) {
       next(error);
     }

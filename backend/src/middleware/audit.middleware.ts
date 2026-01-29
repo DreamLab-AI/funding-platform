@@ -204,6 +204,40 @@ export async function auditExport(
   }
 }
 
+/**
+ * General audit middleware for all API requests
+ * Logs request info for audit trail
+ */
+export function auditMiddleware(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void {
+  // Log request start
+  const startTime = Date.now();
+
+  // Store original json method
+  const originalJson = res.json.bind(res);
+
+  res.json = function (body: unknown) {
+    // Log audit info for non-health-check requests
+    if (!req.originalUrl.includes('/health')) {
+      logger.info('API Request', {
+        method: req.method,
+        path: req.originalUrl,
+        statusCode: res.statusCode,
+        duration: Date.now() - startTime,
+        userId: req.user?.user_id,
+        userRole: req.user?.role,
+        ip: getClientIP(req),
+      });
+    }
+    return originalJson(body);
+  };
+
+  next();
+}
+
 export default {
   createAuditLog,
   audit,
@@ -211,4 +245,5 @@ export default {
   auditLogout,
   auditFileDownload,
   auditExport,
+  auditMiddleware,
 };

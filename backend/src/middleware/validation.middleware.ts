@@ -210,8 +210,13 @@ function sanitizeObject(obj: Record<string, unknown>): Record<string, unknown> {
   return sanitized;
 }
 
-export default {
+// Alias for compatibility
+export const validateRequest = validate;
+
+// Named export for routes using { validationMiddleware }
+export const validationMiddleware = {
   validate,
+  validateRequest: validate,
   validateBody,
   validateQuery,
   validateParams,
@@ -220,3 +225,5 @@ export default {
   sanitizeBody,
   sanitizeString,
 };
+
+export default validationMiddleware;

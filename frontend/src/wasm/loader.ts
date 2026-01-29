@@ -26,7 +26,7 @@ const state: WasmState = {
  * This enables code splitting and lazy loading
  */
 async function importWasmModule(): Promise<WasmVizModule> {
-  // @ts-expect-error - WASM module is generated at build time
+  // WASM module is generated at build time
   const wasm = await import('./pkg/funding_viz');
   return wasm;
 }

@@ -266,7 +266,7 @@ export const generateCSSVariables = (theme: Theme): Record<string, string> => {
 
   // Color scales
   Object.entries(theme.colors).forEach(([colorName, scale]) => {
-    Object.entries(scale).forEach(([shade, value]) => {
+    Object.entries(scale as ColorScale).forEach(([shade, value]) => {
       variables[`--color-${colorName}-${shade}`] = value;
     });
   });

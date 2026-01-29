@@ -31,6 +31,14 @@ export interface AuditContext {
 }
 
 /**
+ * Helper to get user ID from either AuthUser (id) or JWTPayload (sub)
+ */
+function getUserId(user: AuthUser | JWTPayload | undefined): string | undefined {
+  if (!user) return undefined;
+  return 'sub' in user ? user.sub : user.id;
+}
+
+/**
  * Audit event options
  */
 export interface AuditEventOptions {
@@ -83,7 +91,7 @@ export class AuditService {
   log(context: AuditContext, options: AuditEventOptions): AuditLogEntry {
     const entry: AuditLogEntry = {
       eventId: this.generateEventId(),
-      actorId: context.user?.sub || 'anonymous',
+      actorId: getUserId(context.user) || 'anonymous',
       actorRole: context.user?.role || UserRole.APPLICANT,
       actorEmail: 'email' in (context.user || {}) ? (context.user as AuthUser).email : undefined,
       action: options.action,
@@ -120,7 +128,7 @@ export class AuditService {
     return this.log(context, {
       action,
       targetType: AuditTargetType.USER,
-      targetId: context.user?.sub,
+      targetId: getUserId(context.user),
       details,
       success,
     });
@@ -150,7 +158,7 @@ export class AuditService {
     return this.log(context, {
       action: AuditAction.LOGOUT,
       targetType: AuditTargetType.USER,
-      targetId: context.user?.sub,
+      targetId: getUserId(context.user),
       success: true,
     });
   }
@@ -162,7 +170,7 @@ export class AuditService {
     return this.log(context, {
       action: AuditAction.PASSWORD_CHANGE,
       targetType: AuditTargetType.USER,
-      targetId: context.user?.sub,
+      targetId: getUserId(context.user),
       details: { reason },
       success,
       errorMessage: !success ? reason : undefined,

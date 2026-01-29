@@ -225,8 +225,13 @@ export function requireMinimumRole(minimumRole: UserRole) {
   };
 }
 
-export default {
+// Alias for convenience
+export const requireRole = requireRoles;
+
+// Named export for routes using { rbacMiddleware }
+export const rbacMiddleware = {
   requireRoles,
+  requireRole: requireRoles,
   requireAdmin,
   requireCoordinator,
   requireAssessor,
@@ -235,3 +240,5 @@ export default {
   checkPermission,
   requireMinimumRole,
 };
+
+export default rbacMiddleware;

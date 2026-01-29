@@ -172,7 +172,8 @@ export function validateUploadedFile(
   }
 }
 
-export default {
+// Named export for routes using { uploadMiddleware }
+export const uploadMiddleware = {
   createUploadMiddleware,
   uploadSingle,
   uploadMultiple,
@@ -181,3 +182,5 @@ export default {
   handleUploadError,
   validateUploadedFile,
 };
+
+export default uploadMiddleware;
