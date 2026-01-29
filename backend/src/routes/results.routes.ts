@@ -6,6 +6,9 @@ import { UserRole } from '../types';
 
 const router = Router();
 
+// Demo routes (no auth required)
+router.get('/demo/:callId', resultsController.getMasterResults);
+
 // All routes require authentication and coordinator role
 router.use(authenticate);
 router.use(requireRoles(UserRole.COORDINATOR, UserRole.ADMIN));

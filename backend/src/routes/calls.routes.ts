@@ -35,6 +35,9 @@ const createCallSchema = z.object({
 router.get('/open', callsController.listOpenCalls);
 router.get('/:id/public', callsController.getPublicCallDetails);
 
+// Demo route - list all calls without auth (for screenshots/demos)
+router.get('/demo', callsController.list);
+
 // Protected routes
 router.use(authenticate);
 

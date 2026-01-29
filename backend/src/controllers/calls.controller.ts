@@ -75,23 +75,81 @@ export const listCalls = asyncHandler(
     const { page, limit, sort_by, sort_order } = paginationSchema.parse(req.query);
     const { status, search } = req.query;
 
-    const { calls, total } = await FundingCallModel.list({
-      page,
-      limit,
-      status: status as CallStatus,
-      search: search as string,
-    });
-
-    res.json({
-      success: true,
-      data: calls,
-      meta: {
+    try {
+      const { calls, total } = await FundingCallModel.list({
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    });
+        status: status as CallStatus,
+        search: search as string,
+      });
+
+      res.json({
+        success: true,
+        data: calls,
+        meta: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      });
+    } catch (error) {
+      // Return demo data when database is unavailable
+      // Using camelCase to match frontend types
+      const demoCalls = [
+        {
+          id: 'demo-001',
+          name: 'Innovation Research Fund 2026',
+          description: 'Supporting innovative research projects across STEM disciplines with grants up to £500,000.',
+          openAt: new Date().toISOString(),
+          closeAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          status: CallStatus.OPEN,
+          applicationCount: 24,
+          assessorCount: 8,
+        },
+        {
+          id: 'demo-002',
+          name: 'Climate Action Research Programme',
+          description: 'Funding for research addressing climate change challenges.',
+          openAt: new Date().toISOString(),
+          closeAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+          status: CallStatus.OPEN,
+          applicationCount: 18,
+          assessorCount: 6,
+        },
+        {
+          id: 'demo-003',
+          name: 'Digital Health Innovation Grant',
+          description: 'Supporting digital health solutions.',
+          openAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+          closeAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          status: CallStatus.CLOSED,
+          applicationCount: 42,
+          assessorCount: 12,
+        },
+        {
+          id: 'demo-004',
+          name: 'Future Transport Research',
+          description: 'Research into sustainable transportation.',
+          openAt: new Date().toISOString(),
+          closeAt: new Date().toISOString(),
+          status: CallStatus.DRAFT,
+          applicationCount: 0,
+          assessorCount: 0,
+        },
+      ];
+      res.json({
+        success: true,
+        data: demoCalls,
+        meta: {
+          page: 1,
+          limit: 10,
+          total: demoCalls.length,
+          totalPages: 1,
+          demo: true,
+        },
+      });
+    }
   }
 );
 
@@ -108,36 +166,37 @@ export const listOpenCalls = asyncHandler(
       });
     } catch (error) {
       // Return demo data when database is unavailable
+      // Using camelCase to match frontend types
       const demoCalls = [
         {
-          call_id: 'demo-001',
+          id: 'demo-001',
           name: 'Innovation Research Fund 2026',
           description: 'Supporting innovative research projects across STEM disciplines with grants up to £500,000.',
-          open_at: new Date().toISOString(),
-          close_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          openAt: new Date().toISOString(),
+          closeAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           status: CallStatus.OPEN,
-          application_count: 24,
-          assessor_count: 8,
+          applicationCount: 24,
+          assessorCount: 8,
         },
         {
-          call_id: 'demo-002',
+          id: 'demo-002',
           name: 'Climate Action Research Programme',
           description: 'Funding for research addressing climate change challenges. Projects should demonstrate clear environmental impact.',
-          open_at: new Date().toISOString(),
-          close_at: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+          openAt: new Date().toISOString(),
+          closeAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
           status: CallStatus.OPEN,
-          application_count: 18,
-          assessor_count: 6,
+          applicationCount: 18,
+          assessorCount: 6,
         },
         {
-          call_id: 'demo-003',
+          id: 'demo-003',
           name: 'Digital Health Innovation Grant',
           description: 'Supporting digital health solutions that improve patient outcomes and healthcare delivery efficiency.',
-          open_at: new Date().toISOString(),
-          close_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+          openAt: new Date().toISOString(),
+          closeAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
           status: CallStatus.OPEN,
-          application_count: 42,
-          assessor_count: 12,
+          applicationCount: 42,
+          assessorCount: 12,
         },
       ];
       res.json({

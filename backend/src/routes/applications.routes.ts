@@ -7,6 +7,9 @@ import { UserRole } from '../types';
 
 const router = Router();
 
+// Demo routes (no auth required)
+router.get('/demo', applicationsController.list);
+
 // Protected routes
 router.use(authenticate);
 

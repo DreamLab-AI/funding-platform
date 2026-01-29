@@ -40,7 +40,7 @@ This platform provides a complete solution for organizations managing competitiv
 
 Browse available funding opportunities with deadline badges and application counts.
 
-![Calls List](docs/screenshots/01-calls-list.png)
+![Calls List](docs/screenshots/01-homepage.png)
 
 </td>
 <td width="50%">
@@ -65,7 +65,7 @@ GOV.UK-styled landing with navigation, search, and quick access to opportunities
 
 Full management sidebar with navigation and pending item badges.
 
-![Coordinator Dashboard](docs/screenshots/02-coordinator-dashboard.png)
+![Coordinator Dashboard](docs/screenshots/03-dashboard.png)
 
 </td>
 <td width="50%">
