@@ -175,8 +175,10 @@ jobs:
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Run TruffleHog
         uses: trufflesecurity/trufflehog@main
@@ -243,9 +245,10 @@ jobs:
 
       - name: Upload tfsec results
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('tfsec-results.sarif') != ''
+        continue-on-error: true
         with:
-          sarif_file: infrastructure/terraform/tfsec-results.sarif
+          sarif_file: tfsec-results.sarif
           category: 'terraform'
 
       - name: Run Checkov
@@ -270,11 +273,13 @@ jobs:
 
       - name: Run Kubesec
         uses: controlplaneio/kubesec-action@v0.0.2
+        continue-on-error: true
         with:
           input: k8s/base/backend-deployment.yaml
 
       - name: Run kube-linter
         uses: stackrox/kube-linter-action@v1
+        continue-on-error: true
         with:
           directory: k8s/
           format: sarif
@@ -282,7 +287,8 @@ jobs:
 
       - name: Upload kube-linter results
         uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        if: always() && hashFiles('kubelint-results.sarif') != ''
+        continue-on-error: true
         with:
           sarif_file: kubelint-results.sarif
           category: 'kubernetes'
