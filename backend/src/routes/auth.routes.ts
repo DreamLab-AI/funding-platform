@@ -10,7 +10,8 @@ const router = Router();
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(100),
-  name: z.string().min(2).max(100),
+  first_name: z.string().min(1).max(100),
+  last_name: z.string().min(1).max(100),
   role: z.enum(['applicant', 'assessor', 'coordinator']).optional(),
 });
 

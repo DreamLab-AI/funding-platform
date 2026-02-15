@@ -5,8 +5,8 @@
 import { Link } from 'react-router-dom';
 import { useAllCalls } from '../../hooks/useCalls';
 import { CallStatus, FundingCallSummary } from '../../types';
-import { InlineLoader } from '../../components/Common/LoadingSpinner';
 import { CircularProgress } from '../../components/Common/ProgressBar';
+import { SkeletonDashboard } from '../../components/Common/Skeleton';
 
 export function CoordinatorDashboard() {
   const { calls, isLoading, error } = useAllCalls();
@@ -32,11 +32,7 @@ export function CoordinatorDashboard() {
   };
 
   if (isLoading) {
-    return (
-      <div className="py-8">
-        <InlineLoader message="Loading dashboard..." />
-      </div>
-    );
+    return <SkeletonDashboard />;
   }
 
   if (error) {
@@ -58,8 +54,8 @@ export function CoordinatorDashboard() {
           <p className="text-gray-500">Overview of funding calls and assessments</p>
         </div>
         <Link
-          to="/coordinator/calls/new"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+          to="/dashboard/coordinator/calls/new"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -69,12 +65,12 @@ export function CoordinatorDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <StatCard title="Total Calls" value={stats.total} icon="folder" />
-        <StatCard title="Open Calls" value={stats.open} icon="clock" color="green" />
-        <StatCard title="In Assessment" value={stats.inAssessment} icon="users" color="blue" />
+        <StatCard title="Open" value={stats.open} icon="clock" color="green" />
+        <StatCard title="Assessing" value={stats.inAssessment} icon="users" color="blue" />
         <StatCard title="Completed" value={stats.completed} icon="check" color="purple" />
-        <StatCard title="Total Applications" value={stats.totalApplications} icon="document" />
+        <StatCard title="Applications" value={stats.totalApplications} icon="document" />
       </div>
 
       {/* Active Calls */}
@@ -83,8 +79,23 @@ export function CoordinatorDashboard() {
         {calls.filter(
           (c) => c.status === CallStatus.OPEN || c.status === CallStatus.IN_ASSESSMENT
         ).length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">No active calls</p>
+          <div className="text-center py-16 px-4 bg-gradient-to-b from-gray-50 to-white rounded-lg border-2 border-dashed border-gray-300">
+            <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+            </svg>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Calls</h3>
+            <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">
+              Create a new funding call to start accepting applications from researchers and organisations.
+            </p>
+            <Link
+              to="/dashboard/coordinator/calls/new"
+              className="inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-md text-white bg-primary-500 hover:bg-primary-600 transition-colors"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Create Your First Call
+            </Link>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -131,8 +142,8 @@ export function CoordinatorDashboard() {
                 <tr key={call.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Link
-                      to={`/coordinator/calls/${call.id}`}
-                      className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                      to={`/dashboard/coordinator/calls/${call.id}`}
+                      className="text-sm font-medium text-primary-600 hover:text-primary-900"
                     >
                       {call.name}
                     </Link>
@@ -157,7 +168,7 @@ export function CoordinatorDashboard() {
                       <div className="flex items-center">
                         <div className="w-24 h-2 bg-gray-200 rounded-full mr-2">
                           <div
-                            className="h-2 bg-indigo-600 rounded-full"
+                            className="h-2 bg-primary-600 rounded-full"
                             style={{ width: `${call.assessmentProgress}%` }}
                           />
                         </div>
@@ -171,8 +182,8 @@ export function CoordinatorDashboard() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <Link
-                      to={`/coordinator/calls/${call.id}`}
-                      className="text-indigo-600 hover:text-indigo-900"
+                      to={`/dashboard/coordinator/calls/${call.id}`}
+                      className="text-primary-600 hover:text-primary-900"
                     >
                       View
                     </Link>
@@ -260,7 +271,7 @@ function StatCard({ title, value, icon, color = 'gray' }: StatCardProps) {
           </div>
           <div className="ml-5 w-0 flex-1">
             <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
+              <dt className="text-sm font-medium text-gray-500">{title}</dt>
               <dd className="text-2xl font-semibold text-gray-900">{value}</dd>
             </dl>
           </div>
@@ -301,13 +312,13 @@ function CallCard({ call, getStatusColor }: CallCardProps) {
       </div>
       <div className="mt-4 flex space-x-2">
         <Link
-          to={`/coordinator/calls/${call.id}/applications`}
-          className="flex-1 text-center px-3 py-2 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
+          to={`/dashboard/coordinator/applications`}
+          className="flex-1 text-center px-3 py-2 text-sm font-medium text-primary-600 bg-primary-50 rounded-md hover:bg-primary-100"
         >
           Applications
         </Link>
         <Link
-          to={`/coordinator/calls/${call.id}/results`}
+          to={`/dashboard/coordinator/results`}
           className="flex-1 text-center px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 rounded-md hover:bg-gray-100"
         >
           Results

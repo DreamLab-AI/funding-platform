@@ -138,7 +138,7 @@ export function AssignmentTool() {
               value="round_robin"
               checked={assignmentMethod === 'round_robin'}
               onChange={() => setAssignmentMethod('round_robin')}
-              className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+              className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
             />
             <div className="ml-3">
               <span className="block text-sm font-medium text-gray-900">
@@ -158,7 +158,7 @@ export function AssignmentTool() {
               value="manual"
               checked={assignmentMethod === 'manual'}
               onChange={() => setAssignmentMethod('manual')}
-              className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+              className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
             />
             <div className="ml-3">
               <span className="block text-sm font-medium text-gray-900">
@@ -184,7 +184,7 @@ export function AssignmentTool() {
             </div>
             <button
               onClick={handleSelectAllApplications}
-              className="text-sm text-indigo-600 hover:text-indigo-800"
+              className="text-sm text-primary-600 hover:text-primary-800"
             >
               {selectedApplications.length === eligibleApplications.length
                 ? 'Deselect All'
@@ -230,7 +230,7 @@ export function AssignmentTool() {
             </div>
             <button
               onClick={handleSelectAllAssessors}
-              className="text-sm text-indigo-600 hover:text-indigo-800"
+              className="text-sm text-primary-600 hover:text-primary-800"
             >
               {selectedAssessors.length === assessors.length
                 ? 'Deselect All'
@@ -243,7 +243,7 @@ export function AssignmentTool() {
                 <p className="text-gray-500 mb-2">No assessors in pool.</p>
                 <Link
                   to={`/coordinator/calls/${callId}/assessors`}
-                  className="text-sm text-indigo-600 hover:text-indigo-800"
+                  className="text-sm text-primary-600 hover:text-primary-800"
                 >
                   Add Assessors
                 </Link>
@@ -294,7 +294,7 @@ export function AssignmentTool() {
               disabled={
                 selectedApplications.length === 0 || selectedAssessors.length === 0
               }
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Create Assignments
             </button>
@@ -330,7 +330,7 @@ function ApplicationItem({ application, selected, onToggle }: ApplicationItemPro
   return (
     <li
       className={`p-4 hover:bg-gray-50 cursor-pointer ${
-        selected ? 'bg-indigo-50' : ''
+        selected ? 'bg-primary-50' : ''
       }`}
       onClick={() => onToggle(application.id)}
     >
@@ -340,7 +340,7 @@ function ApplicationItem({ application, selected, onToggle }: ApplicationItemPro
           checked={selected}
           onChange={() => onToggle(application.id)}
           onClick={(e) => e.stopPropagation()}
-          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
         />
         <div className="ml-3 flex-1">
           <p className="text-sm font-medium text-gray-900">
@@ -372,7 +372,7 @@ function AssessorItem({ assessor, selected, onToggle }: AssessorItemProps) {
   return (
     <li
       className={`p-4 hover:bg-gray-50 cursor-pointer ${
-        selected ? 'bg-indigo-50' : ''
+        selected ? 'bg-primary-50' : ''
       }`}
       onClick={() => onToggle(assessor.id)}
     >
@@ -382,7 +382,7 @@ function AssessorItem({ assessor, selected, onToggle }: AssessorItemProps) {
           checked={selected}
           onChange={() => onToggle(assessor.id)}
           onClick={(e) => e.stopPropagation()}
-          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
         />
         <div className="ml-3 flex-1">
           <p className="text-sm font-medium text-gray-900">{assessor.name}</p>

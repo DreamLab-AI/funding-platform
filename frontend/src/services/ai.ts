@@ -137,13 +137,52 @@ export interface IndexResult {
 // API Client Functions
 // -----------------------------------------------------------------------------
 
+// Transform backend status response to frontend AIServiceStatus shape
+function transformStatus(raw: Record<string, unknown>): AIServiceStatus {
+  const features = raw.features as Record<string, boolean> || {};
+  const usage = raw.usage as Record<string, number> || {};
+
+  const cacheHits = usage.cacheHits ?? 0;
+  const cacheMisses = usage.cacheMisses ?? 0;
+  const totalCache = cacheHits + cacheMisses;
+
+  return {
+    enabled: raw.enabled as boolean ?? true,
+    activeProvider: (raw.activeProvider as AIProviderType) || null,
+    providers: (raw.providers as Record<AIProviderType, AIProviderStatus>) || {
+      openai: { provider: 'openai', status: raw.providerStatus === 'healthy' ? 'healthy' : 'unhealthy', lastChecked: new Date().toISOString() },
+      anthropic: { provider: 'anthropic', status: 'unhealthy', error: 'Not configured', lastChecked: new Date().toISOString() },
+      ollama: { provider: 'ollama', status: 'unhealthy', error: 'Not configured', lastChecked: new Date().toISOString() },
+      lmstudio: { provider: 'lmstudio', status: 'unhealthy', error: 'Not configured', lastChecked: new Date().toISOString() },
+      custom: { provider: 'custom', status: 'unhealthy', error: 'Not configured', lastChecked: new Date().toISOString() },
+    } as Record<AIProviderType, AIProviderStatus>,
+    cacheStats: (raw.cacheStats as AIServiceStatus['cacheStats']) || {
+      hits: cacheHits,
+      misses: cacheMisses,
+      size: cacheHits,
+    },
+    features: {
+      summarization: features.summarization ?? false,
+      scoringAssist: features.scoringAssist ?? false,
+      anomalyDetection: features.anomalyDetection ?? false,
+      similarity: features.similarity ?? features.similaritySearch ?? false,
+    },
+    usage: {
+      requestCount: usage.requestCount ?? usage.totalRequests ?? 0,
+      tokenCount: usage.tokenCount ?? usage.totalTokens ?? 0,
+      cacheHitRate: usage.cacheHitRate ?? (totalCache > 0 ? (cacheHits / totalCache) * 100 : 0),
+      sinceTime: (usage.sinceTime as unknown as string) ?? new Date().toISOString(),
+    },
+  };
+}
+
 export const aiApi = {
   /**
    * Get AI service status
    */
   getStatus: async (): Promise<AIServiceStatus> => {
-    const response = await apiClient.get<ApiResponse<AIServiceStatus>>('/ai/status');
-    return response.data.data;
+    const response = await apiClient.get('/ai/status');
+    return transformStatus(response.data.data);
   },
 
   /**

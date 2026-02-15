@@ -131,17 +131,17 @@ export function FileUpload({
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
           isDragActive
-            ? 'border-indigo-500 bg-indigo-50'
+            ? 'border-primary-500 bg-primary-50'
             : disabled || isUploading
             ? 'border-gray-200 bg-gray-50 cursor-not-allowed'
-            : 'border-gray-300 hover:border-indigo-400 hover:bg-gray-50'
+            : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
         }`}
       >
         <input {...getInputProps()} />
         <div className="space-y-2">
           <svg
             className={`mx-auto h-12 w-12 ${
-              isDragActive ? 'text-indigo-500' : 'text-gray-400'
+              isDragActive ? 'text-primary-500' : 'text-gray-400'
             }`}
             stroke="currentColor"
             fill="none"
@@ -155,11 +155,11 @@ export function FileUpload({
             />
           </svg>
           {isDragActive ? (
-            <p className="text-indigo-600 font-medium">Drop files here...</p>
+            <p className="text-primary-600 font-medium">Drop files here...</p>
           ) : (
             <>
               <p className="text-gray-600">
-                <span className="text-indigo-600 font-medium">Click to upload</span> or
+                <span className="text-primary-600 font-medium">Click to upload</span> or
                 drag and drop
               </p>
               <p className="text-sm text-gray-500">

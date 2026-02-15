@@ -27,7 +27,7 @@ export function SubmissionConfirmation() {
           <p className="text-gray-500">Application not found.</p>
           <Link
             to="/calls"
-            className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-500"
+            className="mt-4 inline-flex items-center text-primary-600 hover:text-primary-500"
           >
             Return to calls
           </Link>
@@ -162,13 +162,13 @@ export function SubmissionConfirmation() {
       <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
         <Link
           to="/my-applications"
-          className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           View My Applications
         </Link>
         <Link
           to="/calls"
-          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           Browse More Calls
         </Link>
@@ -178,7 +178,7 @@ export function SubmissionConfirmation() {
       <div className="mt-6 text-center">
         <button
           onClick={() => window.print()}
-          className="text-sm text-indigo-600 hover:text-indigo-500"
+          className="text-sm text-primary-600 hover:text-primary-500"
         >
           Print this page as a receipt
         </button>

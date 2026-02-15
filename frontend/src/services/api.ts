@@ -11,6 +11,7 @@ import {
   LoginCredentials,
   RegisterData,
   User,
+  UserRole,
   FundingCall,
   FundingCallSummary,
   CreateCallData,
@@ -140,21 +141,39 @@ function buildQueryParams(
 // Auth API
 // -----------------------------------------------------------------------------
 
+// Transform backend snake_case user to frontend camelCase User
+function transformUser(backendUser: Record<string, unknown>): User {
+  return {
+    id: (backendUser.user_id || backendUser.id) as string,
+    email: backendUser.email as string,
+    name: `${backendUser.first_name || ''} ${backendUser.last_name || ''}`.trim() || (backendUser.name as string) || '',
+    role: backendUser.role as UserRole,
+    organisation: backendUser.organisation as string | undefined,
+    createdAt: (backendUser.created_at || backendUser.createdAt) as string,
+    updatedAt: (backendUser.updated_at || backendUser.updatedAt || backendUser.created_at || backendUser.createdAt) as string,
+  };
+}
+
+// Transform backend auth response to frontend AuthUser
+function transformAuthResponse(data: Record<string, unknown>): AuthUser {
+  const user = transformUser(data.user as Record<string, unknown>);
+  return {
+    ...user,
+    accessToken: (data.access_token || data.accessToken) as string,
+    refreshToken: (data.refresh_token || data.refreshToken) as string,
+    expiresAt: (data.expires_in || data.expiresAt) as string,
+  };
+}
+
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthUser> => {
-    const response = await apiClient.post<ApiResponse<AuthUser>>(
-      '/auth/login',
-      credentials
-    );
-    return response.data.data;
+    const response = await apiClient.post('/auth/login', credentials);
+    return transformAuthResponse(response.data.data);
   },
 
   register: async (data: RegisterData): Promise<AuthUser> => {
-    const response = await apiClient.post<ApiResponse<AuthUser>>(
-      '/auth/register',
-      data
-    );
-    return response.data.data;
+    const response = await apiClient.post('/auth/register', data);
+    return transformAuthResponse(response.data.data);
   },
 
   logout: async (): Promise<void> => {
@@ -164,16 +183,16 @@ export const authApi = {
   },
 
   refreshToken: async (refreshToken: string): Promise<{ accessToken: string }> => {
-    const response = await apiClient.post<ApiResponse<{ accessToken: string }>>(
-      '/auth/refresh',
-      { refreshToken }
-    );
-    return response.data.data;
+    const response = await apiClient.post('/auth/refresh', {
+      refresh_token: refreshToken,
+    });
+    const data = response.data.data;
+    return { accessToken: data.access_token || data.accessToken };
   },
 
   getCurrentUser: async (): Promise<User> => {
-    const response = await apiClient.get<ApiResponse<User>>('/auth/me');
-    return response.data.data;
+    const response = await apiClient.get('/auth/me');
+    return transformUser(response.data.data);
   },
 
   updatePassword: async (currentPassword: string, newPassword: string): Promise<void> => {

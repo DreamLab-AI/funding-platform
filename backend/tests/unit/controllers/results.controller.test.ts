@@ -141,15 +141,19 @@ describe('Results Controller', () => {
       );
     });
 
-    it('should handle database error (500)', async () => {
+    it('should return demo data on database error', async () => {
       mockReq.params = { callId: mockCallId };
       const dbError = new Error('Database error');
       mockQuery.mockRejectedValue(dbError);
 
-      resultsController.getMasterResults(mockReq, mockRes, mockNext);
-      await flushPromises();
+      await resultsController.getMasterResults(mockReq, mockRes, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(dbError);
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          meta: expect.objectContaining({ demo: true }),
+        })
+      );
     });
   });
 
@@ -690,26 +694,34 @@ describe('Results Controller', () => {
   // =========================================================================
 
   describe('Error Handling', () => {
-    it('should handle database connection errors (500)', async () => {
+    it('should return demo data on database connection errors', async () => {
       mockReq.params = { callId: mockCallId };
       const dbError = new Error('Connection refused');
       mockQuery.mockRejectedValue(dbError);
 
-      resultsController.getMasterResults(mockReq, mockRes, mockNext);
-      await flushPromises();
+      await resultsController.getMasterResults(mockReq, mockRes, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(dbError);
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          meta: expect.objectContaining({ demo: true }),
+        })
+      );
     });
 
-    it('should handle invalid UUID format', async () => {
+    it('should return demo data on invalid UUID format', async () => {
       mockReq.params = { callId: 'invalid-uuid' };
       const dbError = new Error('invalid input syntax for type uuid');
       mockQuery.mockRejectedValue(dbError);
 
-      resultsController.getMasterResults(mockReq, mockRes, mockNext);
-      await flushPromises();
+      await resultsController.getMasterResults(mockReq, mockRes, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(dbError);
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          meta: expect.objectContaining({ demo: true }),
+        })
+      );
     });
 
     it('should handle export service errors', async () => {

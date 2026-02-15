@@ -204,7 +204,7 @@ export function CallSetup() {
                 <input
                   type="text"
                   {...register('name', { required: 'Name is required' })}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   placeholder="e.g., Business Growth Fund 2026"
                 />
                 {errors.name && (
@@ -219,7 +219,7 @@ export function CallSetup() {
                 <textarea
                   {...register('description', { required: 'Description is required' })}
                   rows={4}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   placeholder="Describe the funding opportunity..."
                 />
                 {errors.description && (
@@ -235,7 +235,7 @@ export function CallSetup() {
                   <input
                     type="datetime-local"
                     {...register('openAt', { required: 'Open date is required' })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   />
                 </div>
                 <div>
@@ -245,7 +245,7 @@ export function CallSetup() {
                   <input
                     type="datetime-local"
                     {...register('closeAt', { required: 'Close date is required' })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   />
                 </div>
               </div>
@@ -272,7 +272,7 @@ export function CallSetup() {
                         type="checkbox"
                         value={option.value}
                         {...register('allowedFileTypes')}
-                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                       />
                       <span className="ml-2 text-sm text-gray-700">{option.label}</span>
                     </label>
@@ -288,7 +288,7 @@ export function CallSetup() {
                   <input
                     type="number"
                     {...register('maxFileSize', { min: 1, max: 100 })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   />
                 </div>
                 <div>
@@ -298,7 +298,7 @@ export function CallSetup() {
                   <input
                     type="number"
                     {...register('maxFiles', { min: 1, max: 20 })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   />
                 </div>
               </div>
@@ -310,7 +310,7 @@ export function CallSetup() {
                 <textarea
                   {...register('guidanceText')}
                   rows={3}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   placeholder="Instructions for applicants..."
                 />
               </div>
@@ -323,7 +323,7 @@ export function CallSetup() {
                   <input
                     type="url"
                     {...register('guidanceUrl')}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                     placeholder="https://..."
                   />
                 </div>
@@ -334,7 +334,7 @@ export function CallSetup() {
                   <input
                     type="url"
                     {...register('ediUrl')}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                     placeholder="https://..."
                   />
                 </div>
@@ -351,7 +351,7 @@ export function CallSetup() {
                         type="checkbox"
                         value={type}
                         {...register('requiredConfirmations')}
-                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                       />
                       <span className="ml-2 text-sm text-gray-700">
                         {type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
@@ -380,7 +380,7 @@ export function CallSetup() {
                       commentsRequired: false,
                     })
                   }
-                  className="inline-flex items-center px-3 py-1 text-sm font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100"
+                  className="inline-flex items-center px-3 py-1 text-sm font-medium text-primary-600 bg-primary-50 rounded-md hover:bg-primary-100"
                 >
                   <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -397,7 +397,7 @@ export function CallSetup() {
                   <input
                     type="number"
                     {...register('assessorsPerApplication', { min: 1, max: 5 })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   />
                 </div>
                 <div>
@@ -407,7 +407,7 @@ export function CallSetup() {
                   <input
                     type="number"
                     {...register('varianceThreshold', { min: 5, max: 50 })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Flag results where scores vary by more than this percentage.
@@ -441,7 +441,7 @@ export function CallSetup() {
                         <input
                           type="text"
                           {...register(`criteria.${index}.name`, { required: true })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
@@ -452,7 +452,7 @@ export function CallSetup() {
                           <input
                             type="number"
                             {...register(`criteria.${index}.maxPoints`, { min: 1 })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                           />
                         </div>
                         <div>
@@ -463,7 +463,7 @@ export function CallSetup() {
                             type="number"
                             step="0.1"
                             {...register(`criteria.${index}.weight`)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                           />
                         </div>
                       </div>
@@ -476,7 +476,7 @@ export function CallSetup() {
                       <textarea
                         {...register(`criteria.${index}.description`)}
                         rows={2}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
                       />
                     </div>
 
@@ -484,7 +484,7 @@ export function CallSetup() {
                       <input
                         type="checkbox"
                         {...register(`criteria.${index}.commentsRequired`)}
-                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                       />
                       <span className="ml-2 text-sm text-gray-700">
                         Require comments for this criterion
@@ -560,7 +560,7 @@ export function CallSetup() {
               <button
                 type="button"
                 onClick={() => setCurrentStep(currentStep + 1)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700"
               >
                 Continue
               </button>

@@ -13,16 +13,16 @@ export function Header() {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/auth/login');
   };
 
   const getHomeRoute = () => {
     if (!user) return '/';
     switch (user.role) {
       case UserRole.COORDINATOR:
-        return '/coordinator/dashboard';
+        return '/dashboard/coordinator';
       case UserRole.ASSESSOR:
-        return '/assessor/assignments';
+        return '/dashboard/coordinator/assignments';
       case UserRole.APPLICANT:
         return '/calls';
       default:
@@ -40,7 +40,7 @@ export function Header() {
               to={getHomeRoute()}
               className="flex items-center space-x-2"
             >
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
                 <svg
                   className="w-5 h-5 text-white"
                   fill="none"
@@ -72,7 +72,7 @@ export function Header() {
                   Open Calls
                 </Link>
                 <Link
-                  to="/my-applications"
+                  to="/dashboard/applications"
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
                 >
                   My Applications
@@ -82,7 +82,7 @@ export function Header() {
 
             {isAuthenticated && isAssessor && (
               <Link
-                to="/assessor/assignments"
+                to="/dashboard/coordinator/assignments"
                 className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
               >
                 My Assignments
@@ -92,13 +92,13 @@ export function Header() {
             {isAuthenticated && isCoordinator && (
               <>
                 <Link
-                  to="/coordinator/dashboard"
+                  to="/dashboard/coordinator"
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
                 >
                   Dashboard
                 </Link>
                 <Link
-                  to="/coordinator/calls"
+                  to="/dashboard/coordinator/calls/new"
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
                 >
                   Manage Calls
@@ -119,7 +119,7 @@ export function Header() {
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                   Sign Out
                 </button>
@@ -127,14 +127,14 @@ export function Header() {
             ) : (
               <div className="flex items-center space-x-2">
                 <Link
-                  to="/login"
+                  to="/auth/login"
                   className="text-gray-600 hover:text-gray-900 px-3 py-2 text-sm font-medium"
                 >
                   Sign In
                 </Link>
                 <Link
-                  to="/register"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  to="/auth/register"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                 >
                   Register
                 </Link>

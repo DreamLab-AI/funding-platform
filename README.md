@@ -45,52 +45,36 @@ Browse available funding opportunities with deadline badges and application coun
 </td>
 <td width="50%">
 
-**Landing Page**
+**Coordinator Dashboard**
 
-GOV.UK-styled landing with navigation, search, and quick access to opportunities.
+Full management dashboard with sidebar navigation and pending item badges.
 
-![Landing Page](docs/screenshots/01-landing-page.png)
+![Coordinator Dashboard](docs/screenshots/02-coordinator-dashboard.png)
 
 </td>
 </tr>
 </table>
 
-### Coordinator Dashboard
+### Admin & Authentication
 
 <table>
 <tr>
-<td width="50%">
-
-**Dashboard Sidebar**
-
-Full management sidebar with navigation and pending item badges.
-
-![Coordinator Dashboard](docs/screenshots/03-dashboard.png)
-
-</td>
 <td width="50%">
 
 **AI Settings Panel**
 
 Model-agnostic AI configuration with provider selection and feature toggles.
 
-![AI Settings](docs/screenshots/03-ai-settings.png)
+![AI Settings](docs/screenshots/04-ai-settings.png)
 
 </td>
-</tr>
-</table>
-
-### Authentication
-
-<table>
-<tr>
-<td width="100%">
+<td width="50%">
 
 **Auth Layout**
 
 Clean authentication interface supporting both JWT and Nostr DID login methods.
 
-![Login](docs/screenshots/04-login.png)
+![Login](docs/screenshots/03-login.png)
 
 </td>
 </tr>

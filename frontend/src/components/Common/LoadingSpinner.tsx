@@ -4,13 +4,13 @@
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  color?: 'indigo' | 'white' | 'gray';
+  color?: 'primary' | 'white' | 'gray';
   className?: string;
 }
 
 export function LoadingSpinner({
   size = 'md',
-  color = 'indigo',
+  color = 'primary',
   className = '',
 }: LoadingSpinnerProps) {
   const sizeClasses = {
@@ -21,7 +21,7 @@ export function LoadingSpinner({
   };
 
   const colorClasses = {
-    indigo: 'text-indigo-600',
+    primary: 'text-primary-600',
     white: 'text-white',
     gray: 'text-gray-400',
   };

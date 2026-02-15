@@ -27,9 +27,8 @@ interface NavItem {
 
 const mainNavItems: NavItem[] = [
   { label: 'Home', href: '/' },
-  { label: 'Funding Opportunities', href: '/opportunities' },
-  { label: 'My Applications', href: '/applications' },
-  { label: 'Help & Support', href: '/help' },
+  { label: 'Funding Calls', href: '/calls' },
+  { label: 'Dashboard', href: '/dashboard' },
 ];
 
 const footerNavSections = [
@@ -157,7 +156,7 @@ function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
           {/* User actions */}
           <div className="flex items-center gap-3">
             <Link
-              to="/login"
+              to="/auth/login"
               className={clsx(
                 'hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium',
                 'text-gray-700 hover:text-gray-900',
@@ -167,7 +166,7 @@ function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               Sign in
             </Link>
             <Link
-              to="/register"
+              to="/auth/register"
               className={clsx(
                 'inline-flex items-center px-4 py-2 text-sm font-medium',
                 'text-white bg-primary-600 hover:bg-primary-700',
@@ -232,7 +231,7 @@ function Header({ onMenuToggle, isMenuOpen }: HeaderProps) {
               ))}
               <div className="pt-4 mt-4 border-t border-gray-200">
                 <Link
-                  to="/login"
+                  to="/auth/login"
                   className="block px-4 py-3 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md"
                 >
                   Sign in

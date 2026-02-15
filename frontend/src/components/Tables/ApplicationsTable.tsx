@@ -76,7 +76,7 @@ export function ApplicationsTable({
         <div className="flex-1 h-2 bg-gray-200 rounded-full max-w-[100px]">
           <div
             className={`h-2 rounded-full ${
-              isComplete ? 'bg-green-500' : 'bg-indigo-500'
+              isComplete ? 'bg-green-500' : 'bg-primary-500'
             }`}
             style={{ width: `${percentage}%` }}
           />

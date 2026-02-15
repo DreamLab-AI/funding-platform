@@ -107,7 +107,7 @@ export function MasterResults() {
         </div>
         <button
           onClick={() => setShowExportModal(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -264,7 +264,7 @@ export function MasterResults() {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 flex items-center"
+              className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 flex items-center"
             >
               {exporting && <ButtonLoader />}
               Export
@@ -345,7 +345,7 @@ function ResultRow({ result, isExpanded, onToggle }: ResultRowProps) {
         <td className="px-6 py-4 whitespace-nowrap text-right">
           <button
             onClick={onToggle}
-            className="text-indigo-600 hover:text-indigo-900"
+            className="text-primary-600 hover:text-primary-900"
           >
             {isExpanded ? 'Hide Details' : 'Show Details'}
           </button>
@@ -381,7 +381,7 @@ function AssessorDetails({ scores }: AssessorDetailsProps) {
         <div key={assessor.assessorId} className="bg-white rounded-lg p-4 border border-gray-200">
           <div className="flex items-center justify-between mb-3">
             <span className="font-medium text-gray-900">{assessor.assessorName}</span>
-            <span className="text-lg font-semibold text-indigo-600">
+            <span className="text-lg font-semibold text-primary-600">
               {assessor.overallScore}
             </span>
           </div>

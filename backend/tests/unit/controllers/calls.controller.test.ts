@@ -766,7 +766,7 @@ describe('Calls Controller', () => {
   // =========================================================================
 
   describe('Error Handling', () => {
-    it('should pass database errors to error handler (500)', async () => {
+    it('should return demo data when database fails', async () => {
       mockReq.query = {};
       const dbError = new Error('Database connection failed');
       (FundingCallModel.list as jest.Mock).mockRejectedValue(dbError);
@@ -774,7 +774,12 @@ describe('Calls Controller', () => {
       listCalls(mockReq, mockRes, mockNext);
       await flushPromises();
 
-      expect(mockNext).toHaveBeenCalledWith(dbError);
+      expect(mockRes.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          meta: expect.objectContaining({ demo: true }),
+        })
+      );
     });
   });
 });

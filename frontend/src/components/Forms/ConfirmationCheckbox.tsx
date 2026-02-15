@@ -52,7 +52,7 @@ export function ConfirmationCheckbox({
           href={guidanceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-indigo-600 hover:text-indigo-500 underline"
+          className="text-primary-600 hover:text-primary-500 underline"
         >
           View guidance document
         </a>
@@ -64,7 +64,7 @@ export function ConfirmationCheckbox({
           href={ediUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-indigo-600 hover:text-indigo-500 underline"
+          className="text-primary-600 hover:text-primary-500 underline"
         >
           Complete EDI form
         </a>
@@ -79,7 +79,7 @@ export function ConfirmationCheckbox({
         error
           ? 'border-red-300 bg-red-50'
           : checked
-          ? 'border-indigo-200 bg-indigo-50'
+          ? 'border-primary-200 bg-primary-50'
           : 'border-gray-200 bg-white'
       }`}
     >
@@ -90,7 +90,7 @@ export function ConfirmationCheckbox({
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
           disabled={disabled}
-          className={`h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 ${
+          className={`h-5 w-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500 ${
             disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
           }`}
           aria-describedby={`${type}-description`}

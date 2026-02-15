@@ -251,7 +251,7 @@ export function ApplicationForm() {
                   href={call.requirements.guidanceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-indigo-600 hover:text-indigo-500 mb-4 inline-block"
+                  className="text-sm text-primary-600 hover:text-primary-500 mb-4 inline-block"
                 >
                   View guidance document
                 </a>
@@ -274,7 +274,7 @@ export function ApplicationForm() {
               <button
                 onClick={() => setCurrentStep(1)}
                 disabled={!canProceedToStep(1)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue to Confirmations
               </button>
@@ -302,7 +302,7 @@ export function ApplicationForm() {
               <button
                 onClick={() => setCurrentStep(2)}
                 disabled={!canProceedToStep(2)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Continue to Review
               </button>

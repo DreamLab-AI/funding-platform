@@ -90,7 +90,7 @@ const stringToColor = (str: string): string => {
     'bg-cyan-500',
     'bg-sky-500',
     'bg-blue-500',
-    'bg-indigo-500',
+    'bg-primary-500',
     'bg-violet-500',
     'bg-purple-500',
     'bg-fuchsia-500',

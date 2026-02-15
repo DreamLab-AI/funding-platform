@@ -32,7 +32,7 @@ export function Sidebar() {
     },
     {
       name: 'My Applications',
-      href: '/my-applications',
+      href: '/dashboard/applications',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -49,7 +49,7 @@ export function Sidebar() {
   const assessorNavItems: NavItem[] = [
     {
       name: 'My Assignments',
-      href: '/assessor/assignments',
+      href: '/dashboard/coordinator/assignments',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -66,7 +66,7 @@ export function Sidebar() {
   const coordinatorNavItems: NavItem[] = [
     {
       name: 'Dashboard',
-      href: '/coordinator/dashboard',
+      href: '/dashboard/coordinator',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -80,7 +80,7 @@ export function Sidebar() {
     },
     {
       name: 'Manage Calls',
-      href: '/coordinator/calls',
+      href: '/dashboard/coordinator/calls/new',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -94,7 +94,7 @@ export function Sidebar() {
     },
     {
       name: 'Create Call',
-      href: '/coordinator/calls/new',
+      href: '/dashboard/coordinator/calls/new',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -108,7 +108,7 @@ export function Sidebar() {
     },
     {
       name: 'AI Settings',
-      href: '/admin/ai-settings',
+      href: '/dashboard/admin/ai-settings',
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -145,14 +145,14 @@ export function Sidebar() {
               to={item.href}
               className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
                 isActive(item.href)
-                  ? 'bg-indigo-50 text-indigo-600'
+                  ? 'bg-primary-50 text-primary-600'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
             >
               <span
                 className={`mr-3 ${
                   isActive(item.href)
-                    ? 'text-indigo-600'
+                    ? 'text-primary-600'
                     : 'text-gray-400 group-hover:text-gray-500'
                 }`}
               >

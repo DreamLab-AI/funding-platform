@@ -72,7 +72,7 @@ export function Modal({
                     {showCloseButton && (
                       <button
                         type="button"
-                        className="ml-auto rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="ml-auto rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
                         onClick={onClose}
                       >
                         <span className="sr-only">Close</span>
@@ -172,7 +172,7 @@ export function ConfirmModal({
     info: {
       icon: (
         <svg
-          className="h-6 w-6 text-indigo-600"
+          className="h-6 w-6 text-primary-600"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -185,8 +185,8 @@ export function ConfirmModal({
           />
         </svg>
       ),
-      iconBg: 'bg-indigo-100',
-      button: 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500',
+      iconBg: 'bg-primary-100',
+      button: 'bg-primary-600 hover:bg-primary-700 focus:ring-primary-500',
     },
   };
 
@@ -225,7 +225,7 @@ export function ConfirmModal({
           type="button"
           disabled={isLoading}
           onClick={onClose}
-          className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50"
+          className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50"
         >
           {cancelText}
         </button>

@@ -371,14 +371,14 @@ jobs:
 
       - name: Build
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.API_URL || 'https://api.funding-platform.example.com' }}
+          VITE_API_URL: ${{ vars.API_URL || 'https://api.funding-platform.example.com' }}
         run: pnpm build
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: ./frontend/.next
+          path: ./frontend/dist
           retention-days: 7
 
   # ===========================================================================
@@ -503,7 +503,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ vars.API_URL || 'https://api.funding-platform.example.com' }}
+            VITE_API_URL=${{ vars.API_URL || 'https://api.funding-platform.example.com' }}
 
   # ===========================================================================
   # E2E Tests (Optional - runs on main only)
@@ -563,7 +563,7 @@ jobs:
       - name: Run E2E tests
         working-directory: ./frontend
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:4000
+          VITE_API_URL: http://localhost:4000
         run: pnpm test:e2e
 
       - name: Upload Playwright report

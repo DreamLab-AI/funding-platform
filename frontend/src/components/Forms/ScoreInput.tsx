@@ -119,7 +119,7 @@ export function ScoreInput({
               }
             }}
             disabled={disabled}
-            className={`block w-24 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+            className={`block w-24 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
               disabled ? 'bg-gray-100 cursor-not-allowed' : ''
             }`}
             aria-describedby={`score-${criterion.id}-help`}
@@ -171,7 +171,7 @@ export function ScoreInput({
           onChange={(e) => handleCommentChange(e.target.value)}
           disabled={disabled}
           placeholder="Provide justification for your score..."
-          className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm ${
+          className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm ${
             disabled ? 'bg-gray-100 cursor-not-allowed' : ''
           }`}
         />
@@ -218,7 +218,7 @@ export function ScoreInputGroup({
         <h3 className="text-lg font-medium text-gray-900">Assessment Criteria</h3>
         <div className="text-right">
           <p className="text-sm text-gray-500">Total Score</p>
-          <p className="text-2xl font-bold text-indigo-600">
+          <p className="text-2xl font-bold text-primary-600">
             {totalScore} / {maxTotal}
           </p>
         </div>

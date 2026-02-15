@@ -134,7 +134,7 @@ export function ApplicationsView() {
           </button>
           <Link
             to={`/coordinator/calls/${callId}/assign`}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
           >
             Assign to Assessors
           </Link>
@@ -156,7 +156,7 @@ export function ApplicationsView() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="Search by name, email, or reference..."
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pl-10"
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 pl-10"
               />
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg
@@ -186,7 +186,7 @@ export function ApplicationsView() {
               onChange={(e) =>
                 handleStatusFilter(e.target.value as ApplicationStatus | 'all')
               }
-              className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="block rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
             >
               <option value="all">All Statuses</option>
               <option value={ApplicationStatus.SUBMITTED}>Submitted</option>
@@ -207,8 +207,8 @@ export function ApplicationsView() {
 
       {/* Selection Actions */}
       {selectedIds.length > 0 && (
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4 flex items-center justify-between">
-          <span className="text-sm text-indigo-700">
+        <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 flex items-center justify-between">
+          <span className="text-sm text-primary-700">
             {selectedIds.length} application{selectedIds.length !== 1 ? 's' : ''} selected
           </span>
           <div className="flex items-center space-x-3">
@@ -218,7 +218,7 @@ export function ApplicationsView() {
                   state: { selectedIds },
                 })
               }
-              className="text-sm text-indigo-600 hover:text-indigo-800"
+              className="text-sm text-primary-600 hover:text-primary-800"
             >
               Assign Selected
             </button>

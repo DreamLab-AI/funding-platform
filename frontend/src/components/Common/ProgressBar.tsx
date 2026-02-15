@@ -5,7 +5,7 @@
 interface ProgressBarProps {
   progress: number; // 0-100
   size?: 'sm' | 'md' | 'lg';
-  color?: 'indigo' | 'green' | 'blue' | 'yellow' | 'red';
+  color?: 'primary' | 'green' | 'blue' | 'yellow' | 'red';
   showLabel?: boolean;
   label?: string;
   animated?: boolean;
@@ -14,7 +14,7 @@ interface ProgressBarProps {
 export function ProgressBar({
   progress,
   size = 'md',
-  color = 'indigo',
+  color = 'primary',
   showLabel = true,
   label,
   animated = false,
@@ -28,7 +28,7 @@ export function ProgressBar({
   };
 
   const colorClasses = {
-    indigo: 'bg-indigo-600',
+    primary: 'bg-primary-600',
     green: 'bg-green-500',
     blue: 'bg-blue-500',
     yellow: 'bg-yellow-500',
@@ -80,7 +80,7 @@ export function CircularProgress({
   progress,
   size = 80,
   strokeWidth = 8,
-  color = '#4F46E5',
+  color = '#1d70b8',
   trackColor = '#E5E7EB',
   showLabel = true,
 }: CircularProgressProps) {
@@ -163,7 +163,7 @@ export function StepProgress({ steps, currentStep, onStepClick }: StepProgressPr
                 >
                   <div
                     className={`h-full transition-all duration-300 ${
-                      isCompleted ? 'bg-indigo-600' : 'bg-gray-200'
+                      isCompleted ? 'bg-primary-600' : 'bg-gray-200'
                     }`}
                     style={{ width: isCompleted ? '100%' : '0%' }}
                   />
@@ -181,9 +181,9 @@ export function StepProgress({ steps, currentStep, onStepClick }: StepProgressPr
                   <span
                     className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-full ${
                       isCompleted
-                        ? 'bg-indigo-600 group-hover:bg-indigo-800'
+                        ? 'bg-primary-600 group-hover:bg-primary-800'
                         : isCurrent
-                        ? 'border-2 border-indigo-600 bg-white'
+                        ? 'border-2 border-primary-600 bg-white'
                         : 'border-2 border-gray-300 bg-white'
                     }`}
                   >
@@ -202,7 +202,7 @@ export function StepProgress({ steps, currentStep, onStepClick }: StepProgressPr
                     ) : (
                       <span
                         className={`h-2.5 w-2.5 rounded-full ${
-                          isCurrent ? 'bg-indigo-600' : 'bg-transparent'
+                          isCurrent ? 'bg-primary-600' : 'bg-transparent'
                         }`}
                       />
                     )}
@@ -211,7 +211,7 @@ export function StepProgress({ steps, currentStep, onStepClick }: StepProgressPr
                 <span className="ml-4 flex min-w-0 flex-col">
                   <span
                     className={`text-sm font-medium ${
-                      isCompleted || isCurrent ? 'text-indigo-600' : 'text-gray-500'
+                      isCompleted || isCurrent ? 'text-primary-600' : 'text-gray-500'
                     }`}
                   >
                     {step.name}

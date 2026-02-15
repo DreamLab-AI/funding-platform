@@ -118,13 +118,13 @@ export function DataTable<T>({
     }
     if (currentSort.direction === 'asc') {
       return (
-        <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
         </svg>
       );
     }
     return (
-      <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
       </svg>
     );
@@ -145,7 +145,7 @@ export function DataTable<T>({
                       if (el) el.indeterminate = someSelected ?? false;
                     }}
                     onChange={handleSelectAll}
-                    className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 sm:left-6"
+                    className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 sm:left-6"
                   />
                 </th>
               )}
@@ -175,7 +175,7 @@ export function DataTable<T>({
                 >
                   <div className="flex justify-center">
                     <svg
-                      className="animate-spin h-8 w-8 text-indigo-600"
+                      className="animate-spin h-8 w-8 text-primary-600"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
@@ -214,7 +214,7 @@ export function DataTable<T>({
                   <tr
                     key={id}
                     className={`${
-                      isSelected ? 'bg-indigo-50' : ''
+                      isSelected ? 'bg-primary-50' : ''
                     } ${onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}`}
                     onClick={() => onRowClick?.(item)}
                   >
@@ -228,7 +228,7 @@ export function DataTable<T>({
                             handleSelectRow(id);
                           }}
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 sm:left-6"
+                          className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 sm:left-6"
                         />
                       </td>
                     )}
@@ -294,7 +294,7 @@ export function DataTable<T>({
                   onChange={(e) =>
                     pagination.onPageSizeChange?.(parseInt(e.target.value, 10))
                   }
-                  className="block rounded-md border-gray-300 py-1.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  className="block rounded-md border-gray-300 py-1.5 text-sm focus:border-primary-500 focus:ring-primary-500"
                 >
                   {[10, 20, 50, 100].map((size) => (
                     <option key={size} value={size}>
@@ -336,7 +336,7 @@ export function DataTable<T>({
                       onClick={() => pagination.onPageChange(pageNum)}
                       className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                         pageNum === pagination.page
-                          ? 'z-10 bg-indigo-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                          ? 'z-10 bg-primary-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600'
                           : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20'
                       }`}
                     >
