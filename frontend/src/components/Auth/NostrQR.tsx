@@ -82,7 +82,7 @@ export function NostrQR({
   const [copied, setCopied] = useState(false);
   const [qrSvg, setQrSvg] = useState<string>('');
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Calculate time remaining
   const updateTimeRemaining = useCallback(() => {

@@ -166,7 +166,7 @@ export function useNostr(options: UseNostrOptions = {}): UseNostrReturn {
 
         try {
           const socket = new WebSocket(relayUrl);
-          let timeoutId: NodeJS.Timeout;
+          let timeoutId: ReturnType<typeof setTimeout>;
 
           socket.onopen = () => {
             clearTimeout(timeoutId);
