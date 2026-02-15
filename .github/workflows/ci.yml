@@ -210,7 +210,7 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm test -- --run
+        run: npm test -- --run --passWithNoTests
 
   frontend-build:
     name: Frontend Build

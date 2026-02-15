@@ -802,6 +802,155 @@ kubectl apply -f k8s/ingress.yaml
 
 See `.env.example` for complete configuration.
 
+## CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration and deployment:
+
+| Workflow | Trigger | Status |
+|----------|---------|--------|
+| **CI Pipeline** | Push to main/develop, PRs | Build, test, lint, security scan |
+| **GitHub Pages** | Push to main (frontend changes) | Auto-deploy SPA to Pages |
+| **Security Scan** | Push, PRs, weekly schedule | CodeQL, Trivy, Semgrep, Gitleaks |
+| **Deploy** | Push to main/develop | Kubernetes staging/production |
+
+**Live Demo**: [https://dreamlab-ai.github.io/funding-platform/](https://dreamlab-ai.github.io/funding-platform/)
+
+```mermaid
+flowchart LR
+    subgraph CI["CI Pipeline"]
+        Lint["Lint + TypeCheck"]
+        Test["1,672 Tests"]
+        Build["Build Artifacts"]
+        Security["Security Scan"]
+    end
+
+    subgraph Deploy["Deployment"]
+        Pages["GitHub Pages<br/>(SPA)"]
+        Docker["Docker Images<br/>(GHCR)"]
+        K8s["Kubernetes<br/>(Staging/Prod)"]
+    end
+
+    Lint --> Test --> Build
+    Lint --> Security
+    Build --> Pages
+    Build --> Docker --> K8s
+
+    style CI fill:#e1f5fe,stroke:#01579b
+    style Deploy fill:#e8f5e9,stroke:#2e7d32
+```
+
+## Claude Flow Managed Mesh Swarm
+
+This project is developed and maintained using [Claude Flow V3](https://github.com/ruvnet/claude-flow) multi-agent orchestration. A hierarchical-mesh swarm topology coordinates specialized AI agents for development, testing, security, and deployment tasks.
+
+### Swarm Topology
+
+```mermaid
+flowchart TB
+    subgraph Queen["Queen Coordinator"]
+        Q[Hierarchical-Mesh Controller<br/>Raft Consensus]
+    end
+
+    subgraph Tier1["Tier 1: Architecture & Planning"]
+        Arch["System Architect<br/>Design decisions"]
+        Spec["Specification Agent<br/>Requirements analysis"]
+        Plan["Planner Agent<br/>Task decomposition"]
+    end
+
+    subgraph Tier2["Tier 2: Implementation"]
+        Coder1["Coder Agent<br/>Backend (Express/TS)"]
+        Coder2["Coder Agent<br/>Frontend (React/Vite)"]
+        Coder3["Coder Agent<br/>WASM (Rust)"]
+    end
+
+    subgraph Tier3["Tier 3: Quality & Security"]
+        Tester["Tester Agent<br/>1,672 test suite"]
+        Reviewer["Reviewer Agent<br/>Code quality"]
+        SecArch["Security Architect<br/>CVE remediation"]
+        PerfEng["Performance Engineer<br/>Optimization"]
+    end
+
+    subgraph Memory["Shared Memory (AgentDB)"]
+        HNSW["HNSW Vector Index<br/>Pattern Search"]
+        Neural["Neural Patterns<br/>SONA + MoE"]
+        Hooks["Self-Learning Hooks<br/>27 hooks + 12 workers"]
+    end
+
+    Q --> Tier1
+    Q --> Tier2
+    Q --> Tier3
+    Tier1 <--> Tier2
+    Tier2 <--> Tier3
+    Tier1 & Tier2 & Tier3 --> Memory
+
+    style Queen fill:#7c3aed,stroke:#5b21b6,color:#fff
+    style Tier1 fill:#dbeafe,stroke:#1d4ed8
+    style Tier2 fill:#dcfce7,stroke:#16a34a
+    style Tier3 fill:#fef3c7,stroke:#d97706
+    style Memory fill:#f3e8ff,stroke:#7c3aed
+```
+
+### Swarm Configuration
+
+```yaml
+# claude-flow swarm configuration
+topology: hierarchical-mesh
+max_agents: 15
+strategy: specialized
+consensus: raft
+memory: hybrid
+hnsw_indexing: enabled
+neural_patterns: enabled
+```
+
+### Agent Roles
+
+| Agent | Role | Responsibilities |
+|-------|------|-----------------|
+| **Queen Coordinator** | Orchestration | Task decomposition, agent routing, consensus |
+| **System Architect** | Design | Architecture decisions, API design, schema planning |
+| **Coder (x3)** | Implementation | Backend, frontend, WASM development |
+| **Tester** | Quality | Unit, integration, security, e2e tests |
+| **Reviewer** | Standards | Code review, best practices, accessibility |
+| **Security Architect** | Security | RBAC, JWT, Nostr DID, GDPR compliance |
+| **Performance Engineer** | Optimization | Query optimization, bundle size, WASM perf |
+| **Researcher** | Analysis | Requirements gathering, gap analysis, docs |
+
+### 3-Tier Model Routing
+
+Agents are routed to the optimal AI model tier based on task complexity:
+
+| Tier | Handler | Latency | Use Cases |
+|------|---------|---------|-----------|
+| **1** | Agent Booster (WASM) | <1ms | Simple transforms, type additions |
+| **2** | Haiku | ~500ms | Bug fixes, simple features |
+| **3** | Sonnet/Opus | 2-5s | Architecture, security, complex reasoning |
+
+### Intelligence Pipeline
+
+The swarm uses RuVector's 4-step intelligence pipeline for continuous learning:
+
+1. **RETRIEVE** - Fetch relevant patterns via HNSW-indexed memory (150x-12,500x faster)
+2. **JUDGE** - Evaluate approaches with success/failure verdicts
+3. **DISTILL** - Extract key learnings via LoRA fine-tuning
+4. **CONSOLIDATE** - Prevent catastrophic forgetting via EWC++
+
+### Running the Swarm
+
+```bash
+# Initialize swarm coordination
+npx @claude-flow/cli@latest swarm init \
+  --topology hierarchical-mesh \
+  --max-agents 15 \
+  --strategy specialized
+
+# Search learned patterns
+npx @claude-flow/cli@latest memory search --query "funding platform patterns"
+
+# System diagnostics
+npx @claude-flow/cli@latest doctor --fix
+```
+
 ## Contributing
 
 1. Fork the repository
