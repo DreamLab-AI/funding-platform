@@ -1,6 +1,6 @@
 # =============================================================================
 # Funding Platform Frontend - Multi-stage Dockerfile
-# Next.js React Application with TypeScript
+# Vite React SPA with TypeScript, served by nginx
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -10,19 +10,11 @@ FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-# Install libc6-compat for Alpine compatibility
 RUN apk add --no-cache libc6-compat
 
-# Copy package files
-COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+COPY package.json package-lock.json* ./
 
-# Install dependencies
-RUN \
-  if [ -f yarn.lock ]; then yarn install --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else npm install; \
-  fi
+RUN npm ci
 
 # -----------------------------------------------------------------------------
 # Stage 2: Builder
@@ -31,74 +23,69 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Build arguments for environment variables
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
 
-# Copy dependencies
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Disable telemetry during build
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Build the application
 RUN npm run build
 
 # -----------------------------------------------------------------------------
-# Stage 3: Production Runner
+# Stage 3: Production Runner (nginx)
 # -----------------------------------------------------------------------------
-FROM node:20-alpine AS runner
+FROM nginx:1.27-alpine AS runner
 
-WORKDIR /app
-
-# Set environment
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Add non-root user
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
-
-# Install runtime dependencies
-RUN apk add --no-cache \
-    curl \
-    tini \
-    tzdata
+# Install tini and curl for health checks
+RUN apk add --no-cache tini curl tzdata
 
 # Set timezone to Europe/London for UK compliance
 ENV TZ=Europe/London
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Copy public assets
-COPY --from=builder /app/public ./public
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Set correct permissions for prerender cache
-RUN mkdir .next && chown nextjs:nodejs .next
+# Nginx config for SPA routing (fallback to index.html)
+RUN cat > /etc/nginx/conf.d/default.conf <<'NGINX'
+server {
+    listen 3000;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
 
-# Copy standalone build output
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Gzip compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml;
+    gzip_min_length 256;
+
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # SPA fallback - serve index.html for all non-file routes
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+NGINX
 
 # Security: Remove unnecessary files
 RUN rm -rf /tmp/* /var/cache/apk/*
 
-# Switch to non-root user
-USER nextjs
-
-# Expose port
 EXPOSE 3000
 
-# Set hostname for Next.js
-ENV HOSTNAME="0.0.0.0"
-ENV PORT=3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:3000 || exit 1
 
-# Use tini as init system
 ENTRYPOINT ["/sbin/tini", "--"]
 
-# Start application
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]
