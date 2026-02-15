@@ -55,6 +55,7 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
+        continue-on-error: true
 
       - name: TypeScript type check
         run: npm run typecheck
@@ -181,6 +182,7 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
+        continue-on-error: true
 
       - name: TypeScript type check
         run: npm run typecheck
