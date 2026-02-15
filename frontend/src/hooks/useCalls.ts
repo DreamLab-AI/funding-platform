@@ -8,6 +8,7 @@ import {
   FundingCallSummary,
   CreateCallData,
   CallStatus,
+  ConfirmationType,
   PaginationOptions,
   SortOptions,
   PaginatedResponse,
@@ -52,6 +53,65 @@ const DEMO_CALLS: FundingCallSummary[] = [
     applicationCount: 0,
   },
 ];
+// Demo data for single call details when API is unavailable
+const DEMO_FULL_CALLS: FundingCall[] = [
+  {
+    id: 'demo-001',
+    name: 'Innovation Research Fund 2026',
+    description: 'Supporting innovative research projects across STEM disciplines with grants up to £500,000.',
+    openAt: new Date().toISOString(),
+    closeAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    status: CallStatus.OPEN,
+    requirements: {
+      allowedFileTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+      maxFileSize: 20 * 1024 * 1024,
+      maxFiles: 5,
+      requiredConfirmations: [ConfirmationType.GUIDANCE_READ, ConfirmationType.DATA_SHARING_CONSENT],
+      guidanceText: 'Please read the full guidance notes before submitting your application.',
+      guidanceUrl: 'https://example.org/guidance/innovation-2026',
+    },
+    criteria: [
+      { id: 'c-001', name: 'Scientific Excellence', description: 'Quality and novelty of the proposed research methodology and approach.', maxPoints: 100, weight: 0.3, commentsRequired: true },
+      { id: 'c-002', name: 'Impact & Innovation', description: 'Potential for societal, economic, or environmental impact and degree of innovation.', maxPoints: 100, weight: 0.3, commentsRequired: true },
+      { id: 'c-003', name: 'Feasibility', description: 'Realistic work plan, appropriate resources, and achievable milestones.', maxPoints: 100, weight: 0.2, commentsRequired: true },
+      { id: 'c-004', name: 'Value for Money', description: 'Justification of costs and efficient use of funding.', maxPoints: 100, weight: 0.2, commentsRequired: false },
+    ],
+    assessorsPerApplication: 3,
+    varianceThreshold: 20,
+    retentionYears: 7,
+    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'demo-002',
+    name: 'Climate Action Research Programme',
+    description: 'Funding for research addressing climate change challenges.',
+    openAt: new Date().toISOString(),
+    closeAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+    status: CallStatus.OPEN,
+    requirements: {
+      allowedFileTypes: ['application/pdf'],
+      maxFileSize: 10 * 1024 * 1024,
+      maxFiles: 3,
+      requiredConfirmations: [ConfirmationType.GUIDANCE_READ, ConfirmationType.EDI_COMPLETED, ConfirmationType.DATA_SHARING_CONSENT],
+      guidanceText: 'Applicants must demonstrate alignment with UN Sustainable Development Goals.',
+      guidanceUrl: 'https://example.org/guidance/climate-2026',
+      ediUrl: 'https://example.org/edi/climate-2026',
+    },
+    criteria: [
+      { id: 'c-005', name: 'Scientific Excellence', description: 'Rigour of research design and contribution to climate science.', maxPoints: 100, weight: 0.25, commentsRequired: true },
+      { id: 'c-006', name: 'Impact & Innovation', description: 'Potential to deliver measurable climate action outcomes.', maxPoints: 100, weight: 0.3, commentsRequired: true },
+      { id: 'c-007', name: 'Feasibility', description: 'Deliverability within the proposed timeline and budget.', maxPoints: 100, weight: 0.25, commentsRequired: true },
+      { id: 'c-008', name: 'Value for Money', description: 'Cost-effectiveness and appropriate resource allocation.', maxPoints: 100, weight: 0.2, commentsRequired: false },
+    ],
+    assessorsPerApplication: 2,
+    varianceThreshold: 25,
+    retentionYears: 10,
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
+
 import { callsApi } from '../services/api';
 
 // -----------------------------------------------------------------------------
@@ -187,9 +247,14 @@ export function useCall(callId: string | undefined): UseCallReturn {
     try {
       const data = await callsApi.getCall(callId);
       setCall(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch call';
-      setError(message);
+    } catch {
+      // Fallback to demo data when API is unavailable
+      const demoCall = DEMO_FULL_CALLS.find(c => c.id === callId) || null;
+      if (demoCall) {
+        setCall(demoCall);
+      } else {
+        setError('Call not found');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -6,6 +6,10 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Application,
   ApplicationSummary,
+  ApplicationStatus,
+  CallStatus,
+  FileScanStatus,
+  ConfirmationType,
   CreateApplicationData,
   SubmitApplicationData,
   ApplicationFilters,
@@ -16,6 +20,296 @@ import {
   ExportResult,
 } from '../types';
 import { applicationsApi } from '../services/api';
+
+// Demo data for when API is unavailable (static GitHub Pages deployment)
+const DEMO_APPLICATIONS: ApplicationSummary[] = [
+  {
+    id: 'app-001',
+    callId: 'demo-001',
+    reference: 'APP-2026-001',
+    applicantName: 'Dr Eleanor Whitfield',
+    applicantEmail: 'e.whitfield@imperial.ac.uk',
+    status: ApplicationStatus.SUBMITTED,
+    fileCount: 3,
+    submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    assignmentCount: 2,
+    completedAssessmentCount: 1,
+  },
+  {
+    id: 'app-002',
+    callId: 'demo-001',
+    reference: 'APP-2026-002',
+    applicantName: 'Prof James Hargreaves',
+    applicantEmail: 'j.hargreaves@ucl.ac.uk',
+    status: ApplicationStatus.UNDER_REVIEW,
+    fileCount: 5,
+    submittedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    assignmentCount: 2,
+    completedAssessmentCount: 2,
+  },
+  {
+    id: 'app-003',
+    callId: 'demo-001',
+    reference: 'APP-2026-003',
+    applicantName: 'Dr Priya Chakraborty',
+    applicantEmail: 'p.chakraborty@cam.ac.uk',
+    status: ApplicationStatus.ASSESSED,
+    fileCount: 4,
+    submittedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    assignmentCount: 2,
+    completedAssessmentCount: 2,
+  },
+  {
+    id: 'app-004',
+    callId: 'demo-002',
+    reference: 'APP-2026-004',
+    applicantName: 'Dr Samuel Okonkwo',
+    applicantEmail: 's.okonkwo@ox.ac.uk',
+    status: ApplicationStatus.SUBMITTED,
+    fileCount: 2,
+    submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    assignmentCount: 1,
+    completedAssessmentCount: 0,
+  },
+  {
+    id: 'app-005',
+    callId: 'demo-002',
+    reference: 'APP-2026-005',
+    applicantName: 'Prof Hannah McLaren',
+    applicantEmail: 'h.mclaren@ed.ac.uk',
+    status: ApplicationStatus.UNDER_REVIEW,
+    fileCount: 6,
+    submittedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    assignmentCount: 2,
+    completedAssessmentCount: 1,
+  },
+  {
+    id: 'app-006',
+    callId: 'demo-003',
+    reference: 'APP-2026-006',
+    applicantName: 'Dr Rajesh Patel',
+    applicantEmail: 'r.patel@kcl.ac.uk',
+    status: ApplicationStatus.ASSESSED,
+    fileCount: 3,
+    submittedAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString(),
+    assignmentCount: 2,
+    completedAssessmentCount: 2,
+  },
+  {
+    id: 'app-007',
+    callId: 'demo-003',
+    reference: 'APP-2026-007',
+    applicantName: 'Dr Fiona Campbell',
+    applicantEmail: 'f.campbell@gla.ac.uk',
+    status: ApplicationStatus.ASSESSED,
+    fileCount: 4,
+    submittedAt: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
+    assignmentCount: 2,
+    completedAssessmentCount: 2,
+  },
+  {
+    id: 'app-008',
+    callId: 'demo-001',
+    reference: 'APP-2026-008',
+    applicantName: 'Prof David Llewellyn',
+    applicantEmail: 'd.llewellyn@cardiff.ac.uk',
+    status: ApplicationStatus.SUBMITTED,
+    fileCount: 3,
+    submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    assignmentCount: 0,
+    completedAssessmentCount: 0,
+  },
+];
+
+const DEMO_MY_APPLICATIONS: Application[] = [
+  {
+    id: 'app-001',
+    callId: 'demo-001',
+    call: {
+      id: 'demo-001',
+      name: 'Innovation Research Fund 2026',
+      description: 'Supporting innovative research projects across STEM disciplines with grants up to £500,000.',
+      openAt: new Date().toISOString(),
+      closeAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      status: CallStatus.OPEN,
+      applicationCount: 24,
+    },
+    applicantId: 'user-demo-001',
+    applicantName: 'Dr Eleanor Whitfield',
+    applicantEmail: 'e.whitfield@imperial.ac.uk',
+    applicantOrganisation: 'Imperial College London',
+    reference: 'APP-2026-001',
+    status: ApplicationStatus.SUBMITTED,
+    files: [
+      {
+        id: 'file-001',
+        applicationId: 'app-001',
+        filename: 'research-proposal.pdf',
+        originalFilename: 'research-proposal.pdf',
+        fileSize: 2048000,
+        mimeType: 'application/pdf',
+        scanStatus: FileScanStatus.CLEAN,
+        uploadedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'file-002',
+        applicationId: 'app-001',
+        filename: 'budget-justification.pdf',
+        originalFilename: 'budget-justification.pdf',
+        fileSize: 512000,
+        mimeType: 'application/pdf',
+        scanStatus: FileScanStatus.CLEAN,
+        uploadedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'file-003',
+        applicationId: 'app-001',
+        filename: 'cv-whitfield.pdf',
+        originalFilename: 'cv-whitfield.pdf',
+        fileSize: 256000,
+        mimeType: 'application/pdf',
+        scanStatus: FileScanStatus.CLEAN,
+        uploadedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    confirmations: [
+      {
+        id: 'conf-001',
+        applicationId: 'app-001',
+        type: ConfirmationType.GUIDANCE_READ,
+        confirmedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.1',
+      },
+      {
+        id: 'conf-002',
+        applicationId: 'app-001',
+        type: ConfirmationType.DATA_SHARING_CONSENT,
+        confirmedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.1',
+      },
+    ],
+    submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'app-004',
+    callId: 'demo-002',
+    call: {
+      id: 'demo-002',
+      name: 'Climate Action Research Programme',
+      description: 'Funding for research addressing climate change challenges.',
+      openAt: new Date().toISOString(),
+      closeAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+      status: CallStatus.OPEN,
+      applicationCount: 18,
+    },
+    applicantId: 'user-demo-001',
+    applicantName: 'Dr Eleanor Whitfield',
+    applicantEmail: 'e.whitfield@imperial.ac.uk',
+    applicantOrganisation: 'Imperial College London',
+    reference: 'APP-2026-004',
+    status: ApplicationStatus.SUBMITTED,
+    files: [
+      {
+        id: 'file-004',
+        applicationId: 'app-004',
+        filename: 'climate-research-proposal.pdf',
+        originalFilename: 'climate-research-proposal.pdf',
+        fileSize: 3072000,
+        mimeType: 'application/pdf',
+        scanStatus: FileScanStatus.CLEAN,
+        uploadedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: 'file-005',
+        applicationId: 'app-004',
+        filename: 'data-management-plan.pdf',
+        originalFilename: 'data-management-plan.pdf',
+        fileSize: 384000,
+        mimeType: 'application/pdf',
+        scanStatus: FileScanStatus.CLEAN,
+        uploadedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    confirmations: [
+      {
+        id: 'conf-003',
+        applicationId: 'app-004',
+        type: ConfirmationType.GUIDANCE_READ,
+        confirmedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.1',
+      },
+      {
+        id: 'conf-004',
+        applicationId: 'app-004',
+        type: ConfirmationType.EDI_COMPLETED,
+        confirmedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.1',
+      },
+      {
+        id: 'conf-005',
+        applicationId: 'app-004',
+        type: ConfirmationType.DATA_SHARING_CONSENT,
+        confirmedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.1',
+      },
+    ],
+    submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'app-009',
+    callId: 'demo-003',
+    call: {
+      id: 'demo-003',
+      name: 'Digital Health Innovation Grant',
+      description: 'Supporting digital health solutions.',
+      openAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
+      closeAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      status: CallStatus.CLOSED,
+      applicationCount: 42,
+    },
+    applicantId: 'user-demo-001',
+    applicantName: 'Dr Eleanor Whitfield',
+    applicantEmail: 'e.whitfield@imperial.ac.uk',
+    applicantOrganisation: 'Imperial College London',
+    reference: 'APP-2026-009',
+    status: ApplicationStatus.ASSESSED,
+    files: [
+      {
+        id: 'file-006',
+        applicationId: 'app-009',
+        filename: 'digital-health-proposal.pdf',
+        originalFilename: 'digital-health-proposal.pdf',
+        fileSize: 1536000,
+        mimeType: 'application/pdf',
+        scanStatus: FileScanStatus.CLEAN,
+        uploadedAt: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+    ],
+    confirmations: [
+      {
+        id: 'conf-006',
+        applicationId: 'app-009',
+        type: ConfirmationType.GUIDANCE_READ,
+        confirmedAt: new Date(Date.now() - 48 * 24 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.1',
+      },
+      {
+        id: 'conf-007',
+        applicationId: 'app-009',
+        type: ConfirmationType.DATA_SHARING_CONSENT,
+        confirmedAt: new Date(Date.now() - 48 * 24 * 60 * 60 * 1000).toISOString(),
+        ipAddress: '192.168.1.1',
+      },
+    ],
+    submittedAt: new Date(Date.now() - 48 * 24 * 60 * 60 * 1000).toISOString(),
+    createdAt: new Date(Date.now() - 55 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+  },
+];
 
 // -----------------------------------------------------------------------------
 // useMyApplications - Applicant's own applications
@@ -39,10 +333,9 @@ export function useMyApplications(): UseMyApplicationsReturn {
     try {
       const data = await applicationsApi.getMyApplications();
       setApplications(data);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to fetch applications';
-      setError(message);
+    } catch {
+      // Fallback to demo data when API is unavailable
+      setApplications(DEMO_MY_APPLICATIONS);
     } finally {
       setIsLoading(false);
     }
@@ -84,10 +377,10 @@ export function useApplication(
     try {
       const data = await applicationsApi.getApplication(applicationId);
       setApplication(data);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to fetch application';
-      setError(message);
+    } catch {
+      // Fallback to demo data when API is unavailable
+      const demoApp = DEMO_MY_APPLICATIONS.find(a => a.id === applicationId) || null;
+      setApplication(demoApp);
     } finally {
       setIsLoading(false);
     }
@@ -153,10 +446,13 @@ export function useCallApplications(
       setApplications(response.data);
       setTotal(response.total);
       setTotalPages(response.totalPages);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to fetch applications';
-      setError(message);
+    } catch {
+      // Fallback to demo data when API is unavailable
+      const filtered = DEMO_APPLICATIONS.filter(a => a.callId === callId);
+      const pageSize = pagination?.pageSize || 20;
+      setApplications(filtered);
+      setTotal(filtered.length);
+      setTotalPages(Math.max(1, Math.ceil(filtered.length / pageSize)));
     } finally {
       setIsLoading(false);
     }
