@@ -91,6 +91,7 @@ jobs:
       - name: Build for production
         env:
           VITE_API_URL: ${{ vars.API_URL || 'https://api.funding-platform.example.com' }}
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
         run: npm run build
 
       - name: Create SPA routing fallback
