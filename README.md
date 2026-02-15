@@ -8,6 +8,8 @@ A comprehensive, enterprise-grade platform for managing funding calls, applicati
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)](https://www.postgresql.org/)
 
+> **[Live Demo](https://dreamlab-ai.github.io/funding-platform/)** -- Browse the frontend SPA deployed on GitHub Pages.
+
 ## Overview
 
 This platform provides a complete solution for organizations managing competitive funding programs, research grants, or any application-based selection process. It supports the entire lifecycle from call creation through application submission, expert assessment, and final results aggregation.
@@ -122,10 +124,10 @@ flowchart TB
 ### Frontend
 - **React 18** with TypeScript
 - **Vite** for fast development and builds
-- **React Query** for data fetching and caching
+- **TanStack Query** (React Query) for data fetching and caching
 - **React Router** for navigation
+- **Tailwind CSS** + **Headless UI** for styling and accessible components
 - **React Hook Form** + **Zod** for form validation
-- **Custom Design System** with CSS custom properties
 - **WASM/Rust** visualizations using `plotters-canvas`
 
 ### Backend
@@ -133,7 +135,7 @@ flowchart TB
 - **TypeScript** with strict mode
 - **PostgreSQL 15** with UUID primary keys
 - **Redis** for session management and caching
-- **JWT** + **Nostr DID** authentication
+- **JWT** + **Nostr** authentication (NIP-07 browser extension, NIP-05 verification, DID:nostr identity)
 - **Zod** for API validation
 - **Winston** for structured logging
 
@@ -144,11 +146,12 @@ flowchart TB
 - **LM Studio** (local inference)
 - **Custom endpoints** (configurable)
 
-### Infrastructure
-- **Docker** + **Docker Compose**
-- **Kubernetes** manifests
-- **GitHub Actions** CI/CD
-- **Terraform** infrastructure as code
+### Infrastructure & Deployment
+- **GitHub Pages** for frontend SPA deployment (auto-deploy on push to main)
+- **Kubernetes** for backend services (manual workflow_dispatch deployment)
+- **Docker** + **Docker Compose** for local development
+- **GitHub Actions** CI/CD (CI Pipeline, Security Scan, Pages Deploy, K8s Deploy)
+- **Vite** base path auto-configured for GitHub Pages subpath
 - **Prometheus** + **Grafana** monitoring
 
 ## Quick Start
@@ -481,7 +484,9 @@ POST /api/v1/ai/similarity          # Find similar applications
 
 ## Nostr DID Authentication
 
-The platform supports decentralized identity through the Nostr protocol:
+The platform uses Nostr-based decentralized identity as its primary authentication mechanism. Users sign in via a **NIP-07 compatible browser extension** (e.g., Alby, nos2x), which provides cryptographic key management without passwords. Each user's identity is represented as a **DID:nostr** identifier derived from their public key, and optionally verified through **NIP-05** DNS-based verification (e.g., `user@example.com`).
+
+The admin/coordinator user is **jjohare** (GitHub contributor and repository owner).
 
 ```typescript
 // Generate or import Nostr keys
@@ -770,21 +775,36 @@ flowchart TB
     style Monitoring fill:#fff3e0,stroke:#e65100
 ```
 
-### Docker Production
+### GitHub Pages (Frontend)
+
+The frontend SPA deploys automatically to GitHub Pages on every push to `main`. The Vite build is configured to use the correct base path (`/funding-platform/`) for the GitHub Pages subpath.
+
+- **Trigger**: Push to `main` branch
+- **URL**: [https://dreamlab-ai.github.io/funding-platform/](https://dreamlab-ai.github.io/funding-platform/)
+- **Workflow**: `.github/workflows/pages-deploy.yml`
+
+### Kubernetes (Backend)
+
+Backend deployment to Kubernetes is triggered manually via `workflow_dispatch`:
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
+# Manual deployment via GitHub Actions UI or CLI
+gh workflow run k8s-deploy.yml
 
-### Kubernetes
-
-```bash
+# Or apply manifests directly
 kubectl apply -f k8s/namespace.yaml
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/secrets.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
 kubectl apply -f k8s/ingress.yaml
+```
+
+### Docker (Local Development)
+
+```bash
+docker-compose up -d
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## Environment Variables
@@ -806,12 +826,12 @@ See `.env.example` for complete configuration.
 
 The project uses GitHub Actions for continuous integration and deployment:
 
-| Workflow | Trigger | Status |
-|----------|---------|--------|
+| Workflow | Trigger | Description |
+|----------|---------|-------------|
 | **CI Pipeline** | Push to main/develop, PRs | Build, test, lint, security scan |
-| **GitHub Pages** | Push to main (frontend changes) | Auto-deploy SPA to Pages |
+| **Pages Deploy** | Push to main | Auto-deploy frontend SPA to GitHub Pages |
 | **Security Scan** | Push, PRs, weekly schedule | CodeQL, Trivy, Semgrep, Gitleaks |
-| **Deploy** | Push to main/develop | Kubernetes staging/production |
+| **K8s Deploy** | Manual (workflow_dispatch) | Kubernetes backend deployment |
 
 **Live Demo**: [https://dreamlab-ai.github.io/funding-platform/](https://dreamlab-ai.github.io/funding-platform/)
 
