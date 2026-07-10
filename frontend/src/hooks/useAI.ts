@@ -3,6 +3,7 @@
 // =============================================================================
 
 import { useState, useCallback, useEffect } from 'react';
+import { DEMO_MODE } from '../utils/demoMode';
 import {
   aiApi,
   AIServiceStatus,
@@ -156,7 +157,15 @@ export function useAI(): UseAIReturn {
         isLoading: false,
         error: null,
       });
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: err instanceof Error ? err.message : 'Failed to load AI service status',
+        }));
+        return;
+      }
       // Fallback to demo data when API is unavailable
       setState({
         status: DEMO_STATUS,

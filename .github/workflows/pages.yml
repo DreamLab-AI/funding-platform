@@ -92,6 +92,10 @@ jobs:
         env:
           VITE_API_URL: ${{ vars.API_URL || 'https://api.funding-platform.example.com' }}
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          # This is the static showcase build with no live backend, so enable the
+          # demo-data fallbacks. Every other build defaults VITE_DEMO_MODE off and
+          # surfaces real API errors instead of serving fabricated records.
+          VITE_DEMO_MODE: 'true'
         run: npm run build
 
       - name: Create SPA routing fallback

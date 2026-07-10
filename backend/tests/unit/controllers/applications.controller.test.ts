@@ -290,11 +290,14 @@ describe('Applications Controller', () => {
   // =========================================================================
 
   describe('submit', () => {
-    it('should submit application successfully (200)', async () => {
+    const futureDeadline = new Date(Date.now() + 24 * 60 * 60 * 1000); // +1 day
+    const pastDeadline = new Date(Date.now() - 24 * 60 * 60 * 1000); // -1 day
+
+    it('should submit application successfully before the deadline (200)', async () => {
       mockReq.params = { id: mockApplicationId };
       const submittedApp = { ...mockApplication, status: 'submitted', submitted_at: new Date() };
       mockQuery
-        .mockResolvedValueOnce({ rows: [{ required: null }] }) // confirmations check
+        .mockResolvedValueOnce({ rows: [{ close_at: futureDeadline }] }) // deadline fetch
         .mockResolvedValueOnce({ rows: [submittedApp] }); // update
 
       applicationsController.submit(mockReq, mockRes, mockNext);
@@ -304,13 +307,60 @@ describe('Applications Controller', () => {
         success: true,
         data: submittedApp,
       });
+      // Update must have run (two queries: deadline fetch + status update)
+      expect(mockQuery).toHaveBeenCalledTimes(2);
     });
 
-    it('should throw 400 when application not found or already submitted', async () => {
+    it('should allow submission when the call has no close_at deadline', async () => {
+      mockReq.params = { id: mockApplicationId };
+      const submittedApp = { ...mockApplication, status: 'submitted', submitted_at: new Date() };
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ close_at: null }] })
+        .mockResolvedValueOnce({ rows: [submittedApp] });
+
+      applicationsController.submit(mockReq, mockRes, mockNext);
+      await flushPromises();
+
+      expect(mockRes.json).toHaveBeenCalledWith({ success: true, data: submittedApp });
+    });
+
+    it('should reject submission after the deadline (409 DEADLINE_PASSED)', async () => {
+      mockReq.params = { id: mockApplicationId };
+      mockQuery.mockResolvedValueOnce({ rows: [{ close_at: pastDeadline }] }); // deadline fetch only
+
+      applicationsController.submit(mockReq, mockRes, mockNext);
+      await flushPromises();
+
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 409,
+          code: 'DEADLINE_PASSED',
+        })
+      );
+      // The status update must NOT have run — only the deadline fetch.
+      expect(mockQuery).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw 404 when application not found or not owned by user', async () => {
+      mockReq.params = { id: mockApplicationId };
+      mockQuery.mockResolvedValueOnce({ rows: [] }); // no matching application
+
+      applicationsController.submit(mockReq, mockRes, mockNext);
+      await flushPromises();
+
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 404,
+          message: 'Application not found',
+        })
+      );
+    });
+
+    it('should throw 400 when application already submitted', async () => {
       mockReq.params = { id: mockApplicationId };
       mockQuery
-        .mockResolvedValueOnce({ rows: [{ required: null }] })
-        .mockResolvedValueOnce({ rows: [] });
+        .mockResolvedValueOnce({ rows: [{ close_at: futureDeadline }] })
+        .mockResolvedValueOnce({ rows: [] }); // update matched nothing (not draft)
 
       applicationsController.submit(mockReq, mockRes, mockNext);
       await flushPromises();
@@ -518,6 +568,19 @@ describe('Applications Controller', () => {
         expect.stringContaining('a.call_id = $'),
         expect.arrayContaining([mockCallId])
       );
+    });
+
+    it('should surface the real error (not demo data) when the DB fails and DEMO_MODE is off', async () => {
+      mockReq.query = { page: '1', limit: '20' };
+      const dbError = new Error('connection refused');
+      mockQuery.mockRejectedValue(dbError);
+
+      applicationsController.list(mockReq, mockRes, mockNext);
+      await flushPromises();
+
+      // Default config.demoMode is false, so no fabricated data is served.
+      expect(mockNext).toHaveBeenCalledWith(dbError);
+      expect(mockRes.json).not.toHaveBeenCalled();
     });
   });
 

@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { pool } from '../config/database';
-import { AppError } from '../utils/errors';
+import { config } from '../config';
+import { AppError, DeadlinePassedError } from '../utils/errors';
+import { isDeadlinePassed } from '../utils/deadline';
 import { logger } from '../utils/logger';
 import { fileService } from '../services/file.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -192,14 +194,30 @@ export const applicationsController = {
       const { id } = req.params;
       const userId = req.user!.id;
 
-      // Verify all required confirmations
-      const confirmResult = await pool.query(
-        `SELECT c.requirements->>'requiredConfirmations' as required
+      // Load the owning funding call's deadline before mutating status. The
+      // frontend disables the submit button past close_at, but that guard is
+      // trivially bypassed by a direct API call, so the deadline MUST be
+      // enforced server-side (gap-analysis P0 #2). Scoping by applicant_id also
+      // ensures a non-owner cannot probe another applicant's call metadata.
+      const callResult = await pool.query(
+        `SELECT c.close_at
          FROM applications a
          JOIN funding_calls c ON a.call_id = c.id
-         WHERE a.id = $1`,
-        [id]
+         WHERE a.id = $1 AND a.applicant_id = $2`,
+        [id, userId]
       );
+
+      if (callResult.rows.length === 0) {
+        throw new AppError('Application not found', 404);
+      }
+
+      const closeAt = callResult.rows[0].close_at as Date | string | null;
+
+      // close_at is a TIMESTAMPTZ (absolute instant authored in Europe/London).
+      // Reject any submission arriving after that instant with 409 Conflict.
+      if (closeAt && isDeadlinePassed(closeAt)) {
+        throw new DeadlinePassedError(new Date(closeAt));
+      }
 
       const result = await pool.query(
         `UPDATE applications
@@ -212,6 +230,8 @@ export const applicationsController = {
       if (result.rows.length === 0) {
         throw new AppError('Application not found or already submitted', 400);
       }
+
+      logger.info('Application submitted', { applicationId: id, applicantId: userId });
 
       res.json({ success: true, data: result.rows[0] });
     } catch (error) {
@@ -248,6 +268,12 @@ export const applicationsController = {
       const result = await pool.query(query, params);
       res.json({ success: true, data: result.rows });
     } catch (error) {
+      // Only serve fabricated demo records when explicitly running in demo mode
+      // (DEMO_MODE=true). Otherwise surface the real error so API consumers are
+      // never silently handed fake data. Defaults OFF.
+      if (!config.demoMode) {
+        return next(error);
+      }
       // Return demo data when database is unavailable
       const demoApplications = [
         {

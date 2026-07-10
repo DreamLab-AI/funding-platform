@@ -3,6 +3,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { DEMO_MODE } from '../utils/demoMode';
 import {
   Assignment,
   Assessment,
@@ -432,7 +433,11 @@ export function useMyAssignments(): UseMyAssignmentsReturn {
     try {
       const data = await assignmentsApi.getMyAssignments();
       setAssignments(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       setAssignments(DEMO_ASSIGNMENTS);
     } finally {
@@ -476,7 +481,11 @@ export function useCallAssignments(
     try {
       const data = await assignmentsApi.getAssignmentsByCall(callId);
       setAssignments(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable, filtered by callId
       const filtered = DEMO_ASSIGNMENTS.filter(
         (a) => a.application?.callId === callId
@@ -662,7 +671,11 @@ export function useCallAssessors(
     try {
       const data = await assessorsApi.getCallAssessors(callId);
       setAssessors(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       const pool = DEMO_ASSESSOR_POOL.map((a) => ({ ...a, callId: callId! }));
       setAssessors(pool);
@@ -892,7 +905,11 @@ export function useCallProgress(
     try {
       const data = await progressApi.getCallProgress(callId);
       setProgress(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       setProgress({ ...DEMO_CALL_PROGRESS, callId: callId! });
     } finally {
@@ -937,7 +954,11 @@ export function useMasterResults(
     try {
       const data = await resultsApi.getMasterResults(callId);
       setResults(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       setResults({ ...DEMO_MASTER_RESULTS, callId: callId! });
     } finally {

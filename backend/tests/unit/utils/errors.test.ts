@@ -212,7 +212,7 @@ describe('Error Classes', () => {
       const error = new DeadlinePassedError(deadline);
       expect(error.message).toContain('Submission deadline has passed');
       expect(error.message).toContain('2024-06-30');
-      expect(error.statusCode).toBe(400);
+      expect(error.statusCode).toBe(409);
       expect(error.code).toBe('DEADLINE_PASSED');
       expect(error.isOperational).toBe(true);
     });

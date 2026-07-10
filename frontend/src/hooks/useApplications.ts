@@ -3,6 +3,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { DEMO_MODE } from '../utils/demoMode';
 import {
   Application,
   ApplicationSummary,
@@ -333,7 +334,11 @@ export function useMyApplications(): UseMyApplicationsReturn {
     try {
       const data = await applicationsApi.getMyApplications();
       setApplications(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       setApplications(DEMO_MY_APPLICATIONS);
     } finally {
@@ -377,7 +382,11 @@ export function useApplication(
     try {
       const data = await applicationsApi.getApplication(applicationId);
       setApplication(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       const demoApp = DEMO_MY_APPLICATIONS.find(a => a.id === applicationId) || null;
       setApplication(demoApp);
@@ -446,7 +455,11 @@ export function useCallApplications(
       setApplications(response.data);
       setTotal(response.total);
       setTotalPages(response.totalPages);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       const filtered = DEMO_APPLICATIONS.filter(a => a.callId === callId);
       const pageSize = pagination?.pageSize || 20;

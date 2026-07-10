@@ -59,6 +59,7 @@ interface Config {
     level: string;
     format: string;
   };
+  demoMode: boolean;
 }
 
 const getEnvVar = (key: string, defaultValue?: string): string => {
@@ -167,6 +168,11 @@ export const config: Config = {
     level: getEnvVar('LOG_LEVEL', 'info'),
     format: getEnvVar('LOG_FORMAT', 'combined'),
   },
+
+  // When false (default), API handlers surface real errors instead of serving
+  // fabricated demo records. Only the static GitHub Pages showcase build sets
+  // DEMO_MODE=true so its endpoints can render without a live database.
+  demoMode: getEnvVarAsBool('DEMO_MODE', false),
 };
 
 export default config;

@@ -57,7 +57,7 @@ export class DeadlinePassedError extends AppError {
   constructor(deadline: Date) {
     super(
       `Submission deadline has passed (${deadline.toISOString()})`,
-      400,
+      409,
       'DEADLINE_PASSED',
       true
     );

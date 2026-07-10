@@ -3,6 +3,7 @@
 // =============================================================================
 
 import { useState, useEffect, useCallback } from 'react';
+import { DEMO_MODE } from '../utils/demoMode';
 import {
   FundingCall,
   FundingCallSummary,
@@ -136,7 +137,11 @@ export function useOpenCalls(): UseOpenCallsReturn {
     try {
       const data = await callsApi.getOpenCalls();
       setCalls(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       const openDemoCalls = DEMO_CALLS.filter(c => c.status === CallStatus.OPEN);
       setCalls(openDemoCalls);
@@ -194,7 +199,11 @@ export function useAllCalls(options?: UseAllCallsOptions): UseAllCallsReturn {
       setCalls(response.data);
       setTotal(response.total);
       setTotalPages(response.totalPages);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       setCalls(DEMO_CALLS);
       setTotal(DEMO_CALLS.length);
@@ -247,7 +256,11 @@ export function useCall(callId: string | undefined): UseCallReturn {
     try {
       const data = await callsApi.getCall(callId);
       setCall(data);
-    } catch {
+    } catch (err) {
+      if (!DEMO_MODE) {
+        setError(err instanceof Error ? err.message : 'Failed to load data');
+        return;
+      }
       // Fallback to demo data when API is unavailable
       const demoCall = DEMO_FULL_CALLS.find(c => c.id === callId) || null;
       if (demoCall) {
