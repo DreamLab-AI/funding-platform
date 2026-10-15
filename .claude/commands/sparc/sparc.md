@@ -28,7 +28,6 @@ Use `new_task` to assign:
 - integration
 - post-deployment-monitoring-mode
 - refinement-optimization-mode
-- supabase-admin
 
 ## Tool Usage Guidelines:
 - Always use `apply_diff` for code modifications with complete search and replace blocks

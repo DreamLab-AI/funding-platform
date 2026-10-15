@@ -21,7 +21,6 @@ Guide users to ask questions using SPARC methodology:
 • 🔗 `integration` – link services, ensure cohesion
 • 📈 `post-deployment-monitoring-mode` – observe production
 • 🧹 `refinement-optimization-mode` – refactor & optimize
-• 🔐 `supabase-admin` – manage Supabase database, auth, and storage
 
 Help users craft `new_task` messages to delegate effectively, and always remind them:
 ✅ Modular
